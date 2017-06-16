@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # Copyright (c) 2015 William Lees
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -34,7 +36,8 @@ def main(argv):
     args = parser.parse_args()
 
     if len(argv) != 7:
-        print "usage: python replace_res.py <input file> <modeller output file> <output file> <chain> <starting_number> <ending_number>."
+        print "usage: python replace_res.py <input file> <output file> <modeller output file> <chain> <starting_number> " \
+              "<ending_number>."
         sys.exit(0)
 
     chain_id = args.chain
@@ -122,10 +125,16 @@ def main(argv):
                             old_rep_resnum = rep_resnum
                             rep_resnum = rep_line[22:27]
                     prev_resnum = resnum
+
+                    # Position input file at next residue (skip all remaining ATOM records of the input file)
                     while line and resnum == prev_resnum:
                         line = f.readline()
                         if line[0:4] == "ATOM":
                             resnum = line[22:27]
+                        # write records at the end of the specified replacement residue range (before we get a
+                        # new residue number from the next "ATOM" record) to preserve "TER", "ENDMDL", "MODEL" lines
+                        else:
+                            of.write(line)
             else:
                 if (not args.remove_anisou) or line[0:6] != "ANISOU": 
                     of.write(line)                

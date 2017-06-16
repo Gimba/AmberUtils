@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 __author__ = 'William Lees'
 __docformat__ = "restructuredtext en"
 
