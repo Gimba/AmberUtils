@@ -23,6 +23,7 @@ import scipy
 import scikits.bootstrap as bootstrap
 import sys
 import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import argparse
