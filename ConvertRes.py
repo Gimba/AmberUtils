@@ -33,7 +33,7 @@ def main(argv):
     
     changes = []
     changed = []
-    
+
     with open(args.ctrlfile, "r") as cf:
         for line in cf:
             row = line.split()

@@ -272,6 +272,7 @@ def read_decomp_file(decomp, energies, res_with_energy, residue_ids, is_compare_
                             else:
                                 print 'Warning: control file id %s does not agree with decomp table id %s' % (residue_id, res)
 
+
         for row in reader:
             res1 = row['Res']
             if res1 in subs:
