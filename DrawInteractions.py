@@ -94,6 +94,7 @@ def main(argv):
     parser.add_argument('-c', '--compare_file', help='only display interactions that differ from those in this file')
     parser.add_argument('-t', '--compare_thresh', help='threshold for comparison (default 0.5 kcal/mol)')
     parser.add_argument('-x', '--omit_same_col', help='do not show interactions between residues in the same column', action='store_true')
+    parser.add_argument('-l', '--add_title', help='add title to diagram')
     args = parser.parse_args()
     
     compare_thresh = 0.5 if args.compare_thresh is None else float(args.compare_thresh)
@@ -101,7 +102,6 @@ def main(argv):
     surface = cairo.PDFSurface(args.output, WIDTH, HEIGHT)  
     ctx = cairo.Context(surface)
     ctx.set_font_size(FONT_SIZE)
-
     cols = {}
     residue_ids = []
     col_ids = []
@@ -172,6 +172,22 @@ def main(argv):
 
     locations = plot_interactions(col_ids, cols, ctx, energies, hbonds, surface, negatives)
 
+    if(args.add_title):
+        ctx.move_to(100,50)
+        ctx.show_text(args.add_title)
+
+        subtitle = ""
+        subtitle = subtitle + "(" + args.compare_thresh + " kcal/mol"
+        if(args.compare_file):
+            subtitle = subtitle + ", " + args.compare_file +")"
+        else:
+            subtitle = subtitle + ")"
+        ctx.move_to(100,80)
+        ctx.show_text(subtitle)
+
+    surface.finish()
+    surface.flush()
+
     write_summary_file(args.summary, col_ids, cols, energies, locations)
 
 
@@ -233,7 +249,6 @@ def plot_interactions(col_ids, cols, ctx, energies, hbonds, surface, negatives):
         colour = 'red' if r1 + r2 in hbonds else 'black'
         dashed = (r1 + r2 in negatives)
         connect_residue(ctx, locations[r1], locations[r2], abs(e), colour, dashed)
-    surface.finish()
     surface.flush()
     return locations
 
