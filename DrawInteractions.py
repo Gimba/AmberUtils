@@ -170,6 +170,9 @@ def main(argv):
                     new_col.append(res)
                 cols[col_id] = new_col
 
+    global BIGGEST_CHANGE
+    BIGGEST_CHANGE = get_biggest_change(new_energies)
+
     locations = plot_interactions(col_ids, cols, ctx, energies, hbonds, surface, negatives)
 
     if(args.add_title):
@@ -349,9 +352,13 @@ def draw_residue(ctx, x, y, text, colour):
  
     
 def connect_residue(ctx, loc1, loc2, width, colour, dash):
+
     (x1, y1) = loc1
     (x2, y2) = loc2
-    
+
+
+
+
     if x1 == x2:
         pass
     
@@ -379,6 +386,13 @@ def connect_residue(ctx, loc1, loc2, width, colour, dash):
     ctx.set_source_rgb(*mc.colorConverter.to_rgb(colour)) 
     ctx.line_to(end_x, end_y)
     ctx.stroke()
+    # add label with value of change for largest chang
+    if width == math.fabs(BIGGEST_CHANGE):
+        ctx.set_source_rgb(0, 0, 0)
+        ctx.set_font_size(FONT_SIZE - 10)
+        x_bearing1, y_bearing1, width1, height1 = ctx.text_extents(str(BIGGEST_CHANGE))[:4]
+        ctx.move_to((x1 + x2 - (width1 + 15 / 2)) / 2, (y1 + y2 - (height1 + 5 / 2)) / 2)
+        ctx.show_text(str(BIGGEST_CHANGE))
     
     
 
@@ -445,6 +459,21 @@ def find_col(res, cols, col_ids):
             if r['Id'] == res:
                 return col_id
     return None
+
+def get_biggest_change(new_energies):
+    biggest = 0.0
+    smallest = 0.0
+    for item in new_energies.values():
+        if item[2] > biggest:
+            biggest = item[2]
+        if item[2] < smallest:
+            smallest = item[2]
+
+    if math.fabs(biggest) > math.fabs(smallest):
+        return biggest
+    else:
+        return smallest
+
 
 
 if __name__ == "__main__":
