@@ -175,7 +175,8 @@ def main(argv):
     locations = plot_interactions(col_ids, cols, ctx, energies, hbonds, surface, negatives)
 
     if(args.add_title):
-        ctx.move_to(100,50)
+        ctx.set_source_rgb(0, 0, 0)
+        ctx.move_to(100,80)
         ctx.show_text(args.add_title)
 
         subtitle = ""
@@ -184,7 +185,8 @@ def main(argv):
             subtitle = subtitle + ", " + args.compare_file +")"
         else:
             subtitle = subtitle + ")"
-        ctx.move_to(100,80)
+        ctx.set_font_size(FONT_SIZE-10)
+        ctx.move_to(100,95)
         ctx.show_text(subtitle)
 
     if args.png:
