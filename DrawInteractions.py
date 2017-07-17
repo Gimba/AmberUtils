@@ -41,6 +41,7 @@ import csv
 import matplotlib.colors as mc
 import sys
 import argparse
+from PIL import Image
 
 # Dimensions in pixels - can be altered at will, but the underlying software library does impose some limits on maximum sizes.
 
@@ -95,6 +96,7 @@ def main(argv):
     parser.add_argument('-t', '--compare_thresh', help='threshold for comparison (default 0.5 kcal/mol)')
     parser.add_argument('-x', '--omit_same_col', help='do not show interactions between residues in the same column', action='store_true')
     parser.add_argument('-l', '--add_title', help='add title to diagram')
+    parser.add_argument('-p', '--png', help='output as png image', action='store_true')
     args = parser.parse_args()
     
     compare_thresh = 0.5 if args.compare_thresh is None else float(args.compare_thresh)
@@ -178,12 +180,20 @@ def main(argv):
 
         subtitle = ""
         subtitle = subtitle + "(" + args.compare_thresh + " kcal/mol"
-        if(args.compare_file):
+        if args.compare_file:
             subtitle = subtitle + ", " + args.compare_file +")"
         else:
             subtitle = subtitle + ")"
         ctx.move_to(100,80)
         ctx.show_text(subtitle)
+
+    if args.png:
+        surface.write_to_png(args.output.split(".")[0] + ".png")
+        img = Image.open(args.output.split(".")[0] + ".png")
+        background = Image.new('RGBA', img.size, (255, 255, 255,1000))
+        out_image = Image.alpha_composite(background, img)
+        out_image = out_image.crop(img.getbbox())
+        out_image.save(args.output.split(".")[0] + ".png")
 
     surface.finish()
     surface.flush()
