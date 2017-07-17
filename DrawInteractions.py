@@ -98,10 +98,10 @@ def main(argv):
     parser.add_argument('-l', '--add_title', help='add title to diagram')
     parser.add_argument('-p', '--png', help='output as png image', action='store_true')
     args = parser.parse_args()
-    
+
     compare_thresh = 0.5 if args.compare_thresh is None else float(args.compare_thresh)
 
-    surface = cairo.PDFSurface(args.output, WIDTH, HEIGHT)  
+    surface = cairo.PDFSurface(args.output, WIDTH, HEIGHT)
     ctx = cairo.Context(surface)
     ctx.set_font_size(FONT_SIZE)
     cols = {}
@@ -129,7 +129,7 @@ def main(argv):
             comp_energies, comp_res_with_energy = remove_single_column(col_ids, cols, comp_energies)
 
     # If there's a compare file, only keep the energies that change more than the threshold
-    
+
     negatives = []
 
     if args.compare_file:
@@ -173,7 +173,10 @@ def main(argv):
                 cols[col_id] = new_col
 
     global BIGGEST_CHANGE
-    BIGGEST_CHANGE = get_biggest_change(new_energies)
+    if args.compare_file:
+        BIGGEST_CHANGE = get_biggest_change(new_energies)
+    else:
+        BIGGEST_CHANGE = 0.0
 
     locations = plot_interactions(col_ids, cols, ctx, energies, hbonds, surface, negatives)
 
