@@ -40,6 +40,9 @@ def main(argv):
 
     with open(args.outfile, 'w') as f:
         f.write(first_line)
+        for item in table:
+            item = ','.join(item)
+            f.write(item + '\n')
 
 if __name__ == "__main__":
     main(sys.argv)
