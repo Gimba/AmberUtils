@@ -30,5 +30,10 @@ def main(argv):
     # convert all items to float
     table = [[float(y) for y in x] for x in table]
 
+    # calculate pearson correlation for every atom
+    correlations = []
+    for column in table:
+        correlations.append(pearsonr(energies[0:49],column))
+
 if __name__ == "__main__":
     main(sys.argv)
