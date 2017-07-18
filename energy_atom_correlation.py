@@ -21,7 +21,7 @@ def main(argv):
     table = []
     header = []
     with open(args.infile, 'r') as f:
-        header = f.readline()
+        header = f.readline().split(',')
         for line in f:
             line = line.split(',')
             table.append(line)
@@ -34,7 +34,14 @@ def main(argv):
     # calculate pearson correlation for every atom
     correlations = []
     for column in table:
-        correlations.append(pearsonr(energies[0:49],column))
+        correlations.append(pearsonr(energies[0:50],column))
+
+    with open(args.outfile, 'w') as f:
+        if len(correlations) != len(header):
+            print "correlations and header differ in length"
+            return
+        for i in range(0,len(correlations)):
+            f.write(header[i] + " " + str(correlations[0]) + " " + str(correlations[1]) + "\n")
 
 if __name__ == "__main__":
     main(sys.argv)
