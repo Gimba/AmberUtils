@@ -30,6 +30,16 @@ def main(argv):
 
     header = sorted(set(header))
 
+    first_line = []
+    for item in header:
+        first_line.append('ATOM ' + str(item) + ' X')
+        first_line.append('ATOM ' + str(item) + ' Y')
+        first_line.append('ATOM ' + str(item) + ' Z')
+
+    first_line = ','.join(first_line)
+
+    with open(args.outfile, 'w') as f:
+        f.write(first_line)
 
 if __name__ == "__main__":
     main(sys.argv)
