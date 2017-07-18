@@ -19,8 +19,9 @@ def main(argv):
             energies.append(float(line))
 
     table = []
+    header = []
     with open(args.infile, 'r') as f:
-        f.readline()
+        header = f.readline()
         for line in f:
             line = line.split(',')
             table.append(line)
