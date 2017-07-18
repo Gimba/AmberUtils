@@ -34,7 +34,7 @@ def main(argv):
     # calculate pearson correlation for every atom
     correlations = []
     for column in table:
-        correlations.append(pearsonr(energies[0:50],column))
+        correlations.append(pearsonr(energies,column))
 
     with open(args.outfile, 'w') as f:
         if len(correlations) != len(header):
