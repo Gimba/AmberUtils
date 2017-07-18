@@ -39,7 +39,7 @@ def main(argv):
     first_line = ','.join(first_line)
 
     with open(args.outfile, 'w') as f:
-        f.write(first_line)
+        f.write(first_line + '\n')
         for item in table:
             item = ','.join(item)
             f.write(item + '\n')
