@@ -41,7 +41,7 @@ def main(argv):
             print "correlations and header differ in length"
             return
         for i in range(0,len(correlations)):
-            f.write(header[i] + " " + str(correlations[0]) + " " + str(correlations[1]) + "\n")
+            f.write(header[i] + ", " + str(correlations[i][0]) + ", " + str(correlations[i][1]) + "\n")
 
 if __name__ == "__main__":
     main(sys.argv)
