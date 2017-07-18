@@ -24,6 +24,10 @@ def main(argv):
                 table_line.append(line[6])
                 table_line.append(line[7])
 
+            if line[0] == 'ENDMDL\n':
+                table.append(table_line)
+                table_line = []
+
     header = sorted(set(header))
 
 
