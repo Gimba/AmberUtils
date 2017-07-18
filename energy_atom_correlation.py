@@ -27,5 +27,8 @@ def main(argv):
 
     table = np.asarray(table).transpose()
 
+    # convert all items to float
+    table = [[float(y) for y in x] for x in table]
+
 if __name__ == "__main__":
     main(sys.argv)
