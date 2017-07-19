@@ -25,25 +25,22 @@ def main(argv):
         for line in f:
             line = line.split(',')
             header.append(line[0])
+            table.append(line[1:])
             # line = line.split(',')
             # table.append(line)
-    print header
-    # table = np.asarray(table).transpose()
-    #
-    # # convert all items to float
-    # table = [[float(y) for y in x] for x in table]
-    #
-    # # calculate pearson correlation for every atom
-    # correlations = []
-    # for column in table:
-    #     correlations.append(pearsonr(energies,column))
-    #
-    # with open(args.outfile, 'w') as f:
-    #     if len(correlations) != len(header):
-    #         print "correlations and header differ in length"
-    #         return
-    #     for i in range(0,len(correlations)):
-    #         f.write(header[i] + ", " + str(correlations[i][0]) + ", " + str(correlations[i][1]) + "\n")
+    table = [[float(y) for y in x] for x in table]
+
+    # calculate pearson correlation for every distance
+    correlations = []
+    for column in table:
+        correlations.append(pearsonr(energies,column))
+
+    with open(args.outfile, 'w') as f:
+        if len(correlations) != len(header):
+            print "correlations and header differ in length"
+            return
+        for i in range(0,len(correlations)):
+            f.write(header[i] + ", " + str(correlations[i][0]) + ", " + str(correlations[i][1]) + "\n")
 
 if __name__ == "__main__":
     main(sys.argv)
