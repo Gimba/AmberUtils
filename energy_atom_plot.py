@@ -30,9 +30,14 @@ def main(argv):
         xticks.append(item[0])
 
     plt.figure(figsize=(25,15))
-    plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
+
     plt.plot(neg)
+    plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
     plt.ylabel("correlation coefficient")
+    plt.suptitle(outfile.split('all')[0][:-1], fontsize=32, fontweight='bold')
+    plt.title("50 strongest negative correlations between atom coordinates and energy values in 30 independent short "
+              "simulations",
+              fontsize=18, ha='center')
     plt.savefig(outfile + "_neg.png")
 
     # clear plot
@@ -46,8 +51,12 @@ def main(argv):
         xticks.append(item[0])
 
     plt.plot(pos)
-    plt.ylabel("correlation coefficient")
     plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
+    plt.ylabel("correlation coefficient")
+    plt.suptitle(outfile.split('all')[0][:-1], fontsize=32, fontweight='bold')
+    plt.title("50 strongest positive correlations between atom coordinates and energy values in 30 independent short "
+              "simulations",
+              fontsize=18, ha='center')
     plt.savefig(outfile + "_pos.png")
 
 if __name__ == "__main__":
