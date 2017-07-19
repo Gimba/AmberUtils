@@ -21,20 +21,27 @@ def main(argv):
     outfile = str(args.infile).split('.')[0]
 
     neg = []
+    xticks = []
     for i in range(0,50):
         item = values[i]
         neg.append(item[1])
+        xticks.append(item[0])
 
+    plt.figure(figsize=(25,15))
+    plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
     plt.plot(neg)
     plt.savefig(outfile + "_neg.png")
     plt.gcf().clear()
 
     pos = []
+    xticks = []
     for i in range(1,51):
         item = values[-i]
         pos.append(item[1])
+        xticks.append(item[0])
 
     plt.plot(pos)
+    plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
     plt.savefig(outfile + "_pos.png")
 
 if __name__ == "__main__":
