@@ -1,5 +1,6 @@
 import sys
 import argparse
+import matplotlib.pyplot as plt
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Plot energy atom correlation interactions.')
@@ -16,6 +17,20 @@ def main(argv):
             values.append(temp)
 
     values = sorted(values, key = lambda x: (x[1]))
+
+    neg = []
+    for i in range(0,50):
+        item = values[i]
+        neg.append(item[1])
+
+    plt.plot(neg)
+
+    pos = []
+    for i in range(1,51):
+        item = values[-i]
+        pos.append(item[1])
+
+    plt.plot(pos)
 
 if __name__ == "__main__":
     main(sys.argv)
