@@ -18,12 +18,16 @@ def main(argv):
 
     values = sorted(values, key = lambda x: (x[1]))
 
+    outfile = str(args.infile).split('.')[0]
+
     neg = []
     for i in range(0,50):
         item = values[i]
         neg.append(item[1])
 
     plt.plot(neg)
+    plt.savefig(outfile + "_neg.png")
+    plt.gcf().clear()
 
     pos = []
     for i in range(1,51):
@@ -31,6 +35,7 @@ def main(argv):
         pos.append(item[1])
 
     plt.plot(pos)
+    plt.savefig(outfile + "_pos.png")
 
 if __name__ == "__main__":
     main(sys.argv)
