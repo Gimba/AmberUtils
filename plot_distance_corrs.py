@@ -32,6 +32,9 @@ def main(argv):
     plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
     plt.plot(neg)
     plt.ylabel("correlation coefficient")
+    plt.suptitle(outfile.split('corr')[0][:-1], fontsize=32, fontweight='bold')
+    plt.title("Correlation between pairwise distances and energy values in 30 independent short simulations",
+                fontsize=18, ha='center')
     plt.savefig(outfile + ".png")
 
 if __name__ == "__main__":
