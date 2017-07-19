@@ -22,6 +22,8 @@ def main(argv):
     header = []
     with open(args.infile, 'r') as f:
         header = f.readline().split(',')
+        # remove '/n' at end of line
+        header[-1] = header[-1][:-1]
         for line in f:
             line = line.split(',')
             table.append(line)
