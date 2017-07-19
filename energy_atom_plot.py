@@ -15,7 +15,7 @@ def main(argv):
             temp[2] = float(temp[2][:-1])
             values.append(temp)
 
-    
+    values = sorted(values, key = lambda x: (x[1]))
 
 if __name__ == "__main__":
     main(sys.argv)
