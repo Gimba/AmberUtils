@@ -16,3 +16,8 @@ for item in files:
             temp = filter(None, temp)
             distances.append(temp[1][:-1])
     values.append(distances)
+
+with open('res_dist_each.dat','w') as f:
+    for column in values:
+        column = ', '.join(column)
+        f.write(column + "\n")
