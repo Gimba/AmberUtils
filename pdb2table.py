@@ -17,7 +17,7 @@ def main(argv):
         for line in f:
             line = filter(None, line.split(" "))
             if line[0] == 'ATOM' and line[1].isdigit():
-                header.append(int(line[1]))
+                header.append(line[1] + " " + line[3] + " " + line[4])
 
                 # add lines to table
                 table_line.append(line[5])
