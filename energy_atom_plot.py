@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import argparse
 import matplotlib.pyplot as plt
@@ -30,7 +32,10 @@ def main(argv):
     plt.figure(figsize=(25,15))
     plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
     plt.plot(neg)
+    plt.ylabel("correlation coefficient")
     plt.savefig(outfile + "_neg.png")
+
+    # clear plot
     plt.gcf().clear()
 
     pos = []
@@ -41,6 +46,7 @@ def main(argv):
         xticks.append(item[0])
 
     plt.plot(pos)
+    plt.ylabel("correlation coefficient")
     plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
     plt.savefig(outfile + "_pos.png")
 
