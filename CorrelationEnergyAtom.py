@@ -20,6 +20,9 @@ import argparse
 import numpy as np
 from scipy.stats.stats import pearsonr
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Calculate correlation between energy values and atom coordinates.')
     parser.add_argument('infile', help='pdb atom records as table from pdb2table')

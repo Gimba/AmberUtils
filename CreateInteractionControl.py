@@ -18,6 +18,9 @@
 import sys
 import argparse
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Creates a 1iqd_interactions_control.csv file for plotting '
                                                  'interaction between residues and therefore determines interacting '

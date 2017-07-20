@@ -18,6 +18,9 @@
 import sys
 import argparse
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Convert a given residue number from 1iqd.pdb C domain (2174-2329) to '
                                                  'range of mutated pdb (1-156)')

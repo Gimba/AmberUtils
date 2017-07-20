@@ -19,6 +19,9 @@ import os
 import argparse
 import sys
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Calculate the energies due to new and lost bonds. Assumes '

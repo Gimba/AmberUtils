@@ -18,6 +18,8 @@
 import sys
 import argparse
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Generate cpptraj pairwise masks for a list of residue numbers (e.g.'

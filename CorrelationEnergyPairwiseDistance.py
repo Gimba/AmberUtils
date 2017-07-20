@@ -20,6 +20,9 @@ import sys
 import argparse
 from scipy.stats.stats import pearsonr
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Calculate correlation between energy values and pairwise distances '
                                                  'of residues.')

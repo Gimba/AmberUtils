@@ -19,6 +19,9 @@ import sys
 import argparse
 import matplotlib.pyplot as plt
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Plot correlation between pairwise distances and energy values in 30 '

@@ -18,6 +18,9 @@
 import sys
 import argparse
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Transform pdb into table that contains atom coordinates as columns.')
     parser.add_argument('infile', help='pdb file as input')

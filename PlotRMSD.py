@@ -20,6 +20,8 @@ import os
 import sys
 import argparse
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Plot RMSDs of hairpin region with title extracted '

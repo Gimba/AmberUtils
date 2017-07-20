@@ -17,11 +17,11 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import glob, os
-
 import argparse
 import sys
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Creates a plot with Errorbars. Assume \'papar.dat\' and '

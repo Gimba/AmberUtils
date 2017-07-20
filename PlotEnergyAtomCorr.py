@@ -19,6 +19,9 @@ import sys
 import argparse
 import matplotlib.pyplot as plt
 
+__author__ = 'Martin Rosellen'
+__docformat__ = "restructuredtext en"
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Plot correlation between atom coordinates and energy values. Two '
                                                  'plots show the 50 strongest negative and 50 strongest positive '
