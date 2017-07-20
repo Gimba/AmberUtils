@@ -17,6 +17,13 @@
 
 
 import os
+import sys
+import argparse
+
+def main(argv):
+    parser = argparse.ArgumentParser(description='Merge content of all files \'*distance*.dat\' into '
+                                                 'res_dist_merged.dat')
+
 
 files = []
 for i in os.listdir('.'):
@@ -37,3 +44,6 @@ with open('res_dist_each.dat','w') as f:
     for column in values:
         column = ', '.join(column)
         f.write(column + "\n")
+
+if __name__ == "__main__":
+    main(sys.argv)
