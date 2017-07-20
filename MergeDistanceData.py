@@ -39,7 +39,7 @@ for item in files:
             distances.append(temp[1][:-1])
     values.append(distances)
 
-with open('res_dist_each.dat','w') as f:
+with open('res_dist_merged.dat','w') as f:
     for column in values:
         column = ', '.join(column)
         f.write(column + "\n")
