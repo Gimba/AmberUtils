@@ -22,9 +22,9 @@ import argparse
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(description='Plot correlation between distance and energywith title extracted '
+    parser = argparse.ArgumentParser(description='Plot distance between residues with title extracted '
                                                  'from the working directory.')
-    parser.add_argument('infile', help='Correlation values from get_residue_energy_correlation.py')
+    parser.add_argument('infile', help='Distance values from hairpin_distance.cpptraj')
     parser.add_argument('outfile', help='File the plot gets saved to')
     args = parser.parse_args()
 
