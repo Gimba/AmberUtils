@@ -24,7 +24,7 @@ def main(argv):
     parser = argparse.ArgumentParser(description='Plot correlation between pairwise distances and energy values in 30 '
                                                  'independent short simulations. Name of outfile generated from '
                                                  'infile.')
-    parser.add_argument('infile', help='csv file created by get_residue_energy_correlation.py')
+    parser.add_argument('infile', help='csv file created by CorrelationEnergyPairwiseDistance.pyCorrelationEnergyPairwiseDistance.py')
     args = parser.parse_args()
 
 
