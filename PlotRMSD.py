@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import os
 import sys
 import argparse
+import numpy as np
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
@@ -28,13 +29,14 @@ def main(argv):
                                                  'from the working directory.')
     parser.add_argument('infile', help='RMSD values from hairpin_rmsd.cpptraj')
     parser.add_argument('outfile', help='File the plot gets saved to')
+    parser.add_argument('num', help='Number of productions used for the calculation')
     args = parser.parse_args()
 
 
     cwd = os.getcwd()
     mutation = cwd.split("/")[-1]
     super = cwd.split("/")[-2]
-    title = (super + " " + mutation + ": Production 1-4 \n RMSD values of hairpin region (2186-2210)")
+    title = (super + " " + mutation + ": Production 1-" + args.num + "\n RMSD values of hairpin region (2186-2210)")
 
     values = []
 
@@ -43,10 +45,23 @@ def main(argv):
         for line in f:
             values.append(float(line.split("    ")[2][3:-1]))
 
+    mean = np.mean(values)
+    variance = np.var(values)
+    caption = "variance: " + str(variance)
+
+    plt.axhline(mean, color='g')
+    plt.ylabel("rmsd value")
+    plt.xlabel("frame")
     plt.plot(values)
+
+    pos = plt.xlim()[1]
+    plt.text(pos/2,0.62,str(caption),ha='center')
+    plt.text(pos,mean," " + str(round(mean,2)),va='center')
+
     plt.ylim([0.6,1.6])
     plt.title(title)
     plt.savefig(args.outfile)
 
+    
 if __name__ == "__main__":
     main(sys.argv)
