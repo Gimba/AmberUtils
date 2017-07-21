@@ -18,56 +18,32 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+import argparse
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
 
-# fake up some data
-spread = np.random.rand(50) * 100
-center = np.ones(25) * 50
-flier_high = np.random.rand(10) * 100 + 100
-flier_low = np.random.rand(10) * -100
-data = np.concatenate((spread, center, flier_high, flier_low), 0)
+def main(argv):
+    parser = argparse.ArgumentParser(description='Boxplot values')
+    parser.add_argument('--list', nargs='*')
+    args = parser.parse_args()
 
-# basic plot
-plt.boxplot(data)
+    data = []
+    for file in args.list:
+        values = []
+        with open(file,'r') as f:
+            f.readline()
+            for line in f:
+                values.append(float(line.split("    ")[2][3:-1]))
+        data.append(np.array(values))
 
-# notched plot
-plt.figure()
-plt.boxplot(data, 1)
+    data = np.array(data)
 
-# change outlier point symbols
-plt.figure()
-plt.boxplot(data, 0, 'gD')
+    plt.figure()
+    plt.boxplot(data)
+    plt.show()
 
-# don't show outlier points
-plt.figure()
-plt.boxplot(data, 0, '')
+if __name__ == "__main__":
+    main(sys.argv)
 
-# horizontal boxes
-plt.figure()
-plt.boxplot(data, 0, 'rs', 0)
-
-# change whisker length
-plt.figure()
-plt.boxplot(data, 0, 'rs', 0, 0.75)
-
-# fake up some more data
-spread = np.random.rand(50) * 100
-center = np.ones(25) * 40
-flier_high = np.random.rand(10) * 100 + 100
-flier_low = np.random.rand(10) * -100
-d2 = np.concatenate((spread, center, flier_high, flier_low), 0)
-data.shape = (-1, 1)
-d2.shape = (-1, 1)
-# data = concatenate( (data, d2), 1 )
-# Making a 2-D array only works if all the columns are the
-# same length.  If they are not, then use a list instead.
-# This is actually more efficient because boxplot converts
-# a 2-D array into a list of vectors internally anyway.
-data = [data, d2, d2[::2, 0]]
-# multiple box plots on one figure
-plt.figure()
-plt.boxplot(data)
-
-plt.show()
