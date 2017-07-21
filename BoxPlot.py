@@ -30,7 +30,15 @@ def main(argv):
     args = parser.parse_args()
 
     data = []
+    xticks = []
+
     for file in args.list:
+
+        # extract name of file
+        tick = file.replace("_rmsd_prod_long_hairpin", "")
+        xticks.append(tick[:-4])
+
+
         values = []
         with open(file,'r') as f:
             f.readline()
@@ -40,9 +48,10 @@ def main(argv):
 
     data = np.array(data)
 
-    plt.figure()
+    plt.ylim([0.6, 1.6])
+    plt.xticks(range(len(xticks)), xticks, size='small', rotation='45', ha='right')
     plt.boxplot(data)
-    plt.show()
+    plt.savefig("RMSD_boxplot.png")
 
 if __name__ == "__main__":
     main(sys.argv)
