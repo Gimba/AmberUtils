@@ -16,8 +16,6 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import matplotlib.pyplot as plt
-import numpy as np
 import sys
 import argparse
 
@@ -27,7 +25,7 @@ __docformat__ = "restructuredtext en"
 def main(argv):
     parser = argparse.ArgumentParser(description='Boxplot values')
     parser.add_argument('contacts', help='unmutated contacts')
-    parser.add_argument('mutated', help='mutated contacts')
+    parser.add_argument('mutation', help='residue that got mutated')
     args = parser.parse_args()
 
     # get contact count for unmutated structure
@@ -38,7 +36,7 @@ def main(argv):
         for line in f:
             if line[0] is not '#':
                 # get extra residue contacts
-                if "_:23@" not in line:
+                if "_:" + args.mutation + "@" not in line:
                     line = line.split(' ')
                     line = filter(None, line)
                     line = line[1].split("_")[1]
@@ -46,45 +44,40 @@ def main(argv):
                     line = line.replace(':', '')
                     contacts.append(line)
 
-    residues = list(set(contacts))
+    contact_residues = list(set(contacts))
 
     contact_atoms = []
-    for item in residues:
+    for item in contact_residues:
         contact_atoms.append([item, contacts.count(item)])
 
 
-    # get contact count for mutated structure
+    # get contact count for mutated structure (not really necessary)
 
-    mutated = []
-
-    with open(args.mutated, 'r') as f:
-        for line in f:
-            if line[0] is not '#':
-                # get extra residue mutated
-                if "_:23@" not in line:
-                    line = line.split(' ')
-                    line = filter(None, line)
-                    line = line[1].split("_")[1]
-                    line = line.split('@')[0]
-                    line = line.replace(':', '')
-                    mutated.append(line)
-
-    residues = list(set(mutated))
-
-    mutated_atoms = []
-    for item in residues:
-        mutated_atoms.append([item, mutated.count(item)])
-
-    print contact_atoms
-    print mutated_atoms
-
-    
-    # model 1:
-    # remove contacts with itself select all lines with ':23@\l*\d*_:23@'
-    # count atom contacts for each residue
-    # get contacts of mutation
-    # substract mutation contacts from residue atom contact count
+    # mutated = []
     #
+    # with open(args.mutated, 'r') as f:
+    #     for line in f:
+    #         if line[0] is not '#':
+    #             # get extra residue mutated
+    #             if "_:23@" not in line:
+    #                 line = line.split(' ')
+    #                 line = filter(None, line)
+    #                 line = line[1].split("_")[1]
+    #                 line = line.split('@')[0]
+    #                 line = line.replace(':', '')
+    #                 mutated.append(line)
+    #
+    # residues = list(set(mutated))
+    #
+    # mutated_atoms = []
+    # for item in residues:
+    #     mutated_atoms.append([item, mutated.count(item)])
+
+    # generate cpptraj file to check contacts of residues designated by contact residues
+    with open("contacts_" + args.mutation + ".cpptraj", 'w') as out:
+
+        for item in contact_residues:
+            out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts" + item + ".dat distance 3.5")
 
 if __name__ == "__main__":
     main(sys.argv)
