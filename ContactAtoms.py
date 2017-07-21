@@ -35,7 +35,7 @@ def main(argv):
     with open(args.contacts, 'r') as f:
         for line in f:
             if line[0] is not '#':
-                # remove intra residue contacts
+                # get extra residue contacts
                 if "_:23@" not in line:
                     line = line.split(' ')
                     line = filter(None, line)
@@ -43,7 +43,13 @@ def main(argv):
                     line = line.split('@')[0]
                     line = line.replace(':', '')
                     contacts.append(line)
-                    
+
+    residues = list(set(contacts))
+
+    contact_atoms = []
+    for item in residues:
+        contact_atoms.append([item, contacts.count(item)])
+
     # model 1:
     # remove contacts with itself select all lines with ':23@\l*\d*_:23@'
     # count atom contacts for each residue
