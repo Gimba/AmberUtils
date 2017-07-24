@@ -93,8 +93,10 @@ def main(argv):
     res_muta_contact_cpptraj = "contact_residues_" + mutation + ".cpptraj"
 
     # generate cpptraj to get contacts of residues in contact with the mutation
+    contact_outfiles = []
     with open(res_muta_contact_cpptraj, 'w') as out:
         for item in contact_residues:
+            contact_outfiles.append("contacts" + item + ".dat")
             out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts" + item + ".dat distance 3.5 \n")
         out.write("go")
 
