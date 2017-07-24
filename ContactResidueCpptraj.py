@@ -62,7 +62,7 @@ def main(argv):
                     contact_residues.append(line)
 
 
-    # store number/occupancy of contacting atoms
+    # store number/occupancy of mutation contacting atoms
     contact_atom_count = []
     for item in contact_residues:
         contact_atom_count.append([item, contact_residues.count(item)])
@@ -90,15 +90,15 @@ def main(argv):
     #     mutated_atoms.append([item, mutated.count(item)])
     # mutated = list(set(mutated))
 
-    # generate cpptraj file to check contacts of residues designated by contact residues
-    cpptraj = "contact_residues_" + mutation + ".cpptraj"
+    res_muta_contact_cpptraj = "contact_residues_" + mutation + ".cpptraj"
 
-    with open(cpptraj, 'w') as out:
+    # generate cpptraj to get contacts of residues in contact with the mutation
+    with open(res_muta_contact_cpptraj, 'w') as out:
         for item in contact_residues:
             out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts" + item + ".dat distance 3.5 \n")
         out.write("go")
 
-    os.system('cpptraj -p ' + pdb_unmutated + ' -i ' + cpptraj + ' -y ' + trajin_unmutated)
+    os.system('cpptraj -p ' + pdb_unmutated + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin_unmutated)
 
 if __name__ == "__main__":
     main(sys.argv)
