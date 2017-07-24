@@ -27,6 +27,8 @@ def main(argv):
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('pdb_unmutated', help='unmutated structure')
     parser.add_argument('trajin_unmutated', help='trajectory for unmutated structure')
+    parser.add_argument('pdb_mutated', help='mutated structure')
+    parser.add_argument('trajin_mutated', help='trajectory for mutated structure')
     parser.add_argument('mutation', help='mutated structure')
     args = parser.parse_args()
 
@@ -34,6 +36,8 @@ def main(argv):
     trajin_unmutated = args.trajin_unmutated
     pdb_unmutated = args.pdb_unmutated
 
+    pdb_mutated = args.pdb_mutated
+    trajin_mutated = args.trajin_mutated
     unmutated_name = pdb_unmutated.split('.')[0]
 
     contact_muta_res_dat = unmutated_name + '_' + mutation + '_contacts.dat'
@@ -68,6 +72,11 @@ def main(argv):
         contact_atom_count.append([item, contact_residues.count(item)])
 
     contact_residues = list(set(contact_residues))
+    get_atom_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
+    get_atom_occupancy(pdb_mutated, trajin_mutated, contact_residues, mutation)
+
+
+def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     # get contact count for mutated structure (not really necessary)
 
     # mutated = []
@@ -100,13 +109,14 @@ def main(argv):
             out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts_" + item + ".dat distance 3.5 \n")
         out.write("go")
 
-    os.system('cpptraj -p ' + pdb_unmutated + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin_unmutated)
+    os.system('cpptraj -p ' + pdb + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin)
 
     # get total of atomic contacts of residues contacting the mutation
 
     # all_residue_contacts contains triples, first is the selected residue, second is a contacting residue,
     # and third the number of contacts between the two residues
     all_residue_contacts = []
+    total_contacts = 0
     for contact_file in contact_outfiles:
         residue_contacts = []
         residue = contact_file.split('_')[1].split('.')[0]
@@ -125,7 +135,10 @@ def main(argv):
         residue_contact_atom_count = []
         for item in residue_contacts:
             residue_contact_atom_count.append([residue,item, residue_contacts.count(item)])
+            total_contacts += res_muta_contact_cpptraj.count(item)
         all_residue_contacts.append(residue_contact_atom_count)
-    
+
+    print total_contacts
+
 if __name__ == "__main__":
     main(sys.argv)
