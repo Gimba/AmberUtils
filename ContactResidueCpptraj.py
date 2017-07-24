@@ -46,7 +46,7 @@ def main(argv):
     # generate cpptraj infile to get contacting residues of the selected/mutated residue
     with open(contact_muta_res_cpptraj, 'w') as f:
         f.write('strip :WAT\nstrip @H*\nstrip @?H*\nnativecontacts :' + mutation + ' :1-50000 writecontacts ' +
-                contact_muta_res_dat + ' distance 4.0\ngo')
+                contact_muta_res_dat + ' distance 3.9\ngo')
 
     # run cpptraj
     os.system('cpptraj -p ' + pdb_unmutated + ' -y ' + trajin_unmutated + ' -i ' + contact_muta_res_cpptraj)
@@ -102,11 +102,12 @@ def main(argv):
     total1 = 0
     total2 = 0
     total_mutation = 0
-    c23 = []
-    c188 = []
-
+    tuples1 = []
+    tuples2 = []
     for triple1 in occupancy1:
         for triple2 in occupancy2:
+            tuples1.append(triple1[0] + '_' + triple1[1])
+            tuples2.append(triple2[0] + '_' + triple2[1])
             if triple1[0] == triple2[0] and triple1[1] == triple2[1]:
                 total1 += triple1[2]
                 total2 += triple2[2]
@@ -115,12 +116,25 @@ def main(argv):
                 print triple1[0] + " " + triple1[1] + " " + str(diff)
                 if triple2[1] == mutation:
                     total_mutation += triple2[2] - triple1[2]
-                if triple1[1] == "23":
-                    c23.append(triple1)
+
+    # manage lost contacts which show not up in mutated occupancy
+    tuples1 = set(tuples1)
+    tuples2 = set(tuples2)
+
+    lost_contacts = list(tuples1 - tuples2)
+
+    print "lost contacts"
+    for tuple in lost_contacts:
+        res1 = tuple.split('_')[0]
+        res2 = tuple.split('_')[1]
+        for triple in occupancy1:
+             if triple[0] == res1 and triple[1] == res2:
+                 print res1 + " " + res2 + " " + str(0 - triple[2])
+
     print "total unmutated " + str(total1)
     print "total mutated " + str(total2)
     print "total mutation " + str(total_mutation)
-    print c23
+
 
 def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
 
@@ -129,13 +143,14 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     # generate cpptraj to get contacts of residues in contact with the mutation
     contact_outfiles = []
     with open(res_muta_contact_cpptraj, 'w') as out:
+        out.write('strip :WAT\nstrip @H*\nstrip @?H*\n')
         for item in contact_residues:
             contact_outfiles.append("contacts_" + item + ".dat")
-            out.write("strip :WAT\nstrip @H*\nstrip @?H*\nnativecontacts :" + item + " :1-50000 writecontacts contacts_" + item +
-                      ".dat distance 4.0\n")
+            out.write("nativecontacts :" + item + " :1-50000 writecontacts contacts_" + item +
+                      ".dat distance 3.9\n")
         out.write("go")
 
-    os.system('cpptraj -p ' + pdb + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin)
+    os.system('cpptraj -p ' + pdb + ' -y ' + trajin + ' -i ' + res_muta_contact_cpptraj)
 
     # get total of atomic contacts of residues contacting the mutation
 
