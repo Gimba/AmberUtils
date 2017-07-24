@@ -45,7 +45,9 @@ def main(argv):
 
     # generate cpptraj infile to get contacting residues of the selected/mutated residue
     with open(contact_muta_res_cpptraj, 'w') as f:
-        f.write('nativecontacts :' + mutation + ' :1-5000 writecontacts ' + contact_muta_res_dat + ' distance 3.5 \ngo')
+        f.write('strip :WAT\nnativecontacts :' + mutation + ' :1-50000 writecontacts ' + contact_muta_res_dat + ' '
+                                                                                                                'distance 3.5 '
+                                                                                                    '\ngo')
 
     # run cpptraj
     os.system('cpptraj -p ' + pdb_unmutated + ' -y ' + trajin_unmutated + ' -i ' + contact_muta_res_cpptraj)
@@ -72,11 +74,7 @@ def main(argv):
         contact_atom_count.append([item, contact_residues.count(item)])
 
     contact_residues = list(set(contact_residues))
-    get_atom_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
-    get_atom_occupancy(pdb_mutated, trajin_mutated, contact_residues, mutation)
 
-
-def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     # get contact count for mutated structure (not really necessary)
 
     # mutated = []
@@ -99,6 +97,29 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     #     mutated_atoms.append([item, mutated.count(item)])
     # mutated = list(set(mutated))
 
+    occupancy1 = get_atom_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
+    occupancy2 = get_atom_occupancy(pdb_mutated, trajin_mutated, contact_residues, mutation)
+
+    total1 = 0
+    total2 = 0
+    total_mutation = 0
+    for triple1 in occupancy1:
+        for triple2 in occupancy2:
+            if triple1[0] == triple2[0] and triple1[1] == triple2[1]:
+                total1 += triple1[2]
+                total2 += triple2[2]
+                # a negative value means that the initial structure has lost this number of contacts
+                diff = triple2[2] - triple1[2]
+                print triple1[0] + " " + triple1[1] + " " + str(diff)
+                if triple2[1] == mutation:
+                    total_mutation += triple2[2] - triple1[2]
+
+    print "total unmutated " + str(total1)
+    print "total mutated " + str(total2)
+    print "total mutation " + str(total_mutation)
+
+def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
+
     res_muta_contact_cpptraj = "contact_residues_" + mutation + ".cpptraj"
 
     # generate cpptraj to get contacts of residues in contact with the mutation
@@ -106,7 +127,9 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     with open(res_muta_contact_cpptraj, 'w') as out:
         for item in contact_residues:
             contact_outfiles.append("contacts_" + item + ".dat")
-            out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts_" + item + ".dat distance 3.5 \n")
+            out.write("strip :WAT\nnativecontacts :" + item + " :1-50000 writecontacts contacts_" + item + ".dat "
+                                                                                                         "distance "
+                                                                                                     "3.5 \n")
         out.write("go")
 
     os.system('cpptraj -p ' + pdb + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin)
@@ -116,7 +139,6 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     # all_residue_contacts contains triples, first is the selected residue, second is a contacting residue,
     # and third the number of contacts between the two residues
     all_residue_contacts = []
-    total_contacts = 0
     for contact_file in contact_outfiles:
         residue_contacts = []
         residue = contact_file.split('_')[1].split('.')[0]
@@ -132,13 +154,10 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
                         line = line.replace(':', '')
                         residue_contacts.append(line)
 
-        residue_contact_atom_count = []
-        for item in residue_contacts:
-            residue_contact_atom_count.append([residue,item, residue_contacts.count(item)])
-            total_contacts += res_muta_contact_cpptraj.count(item)
-        all_residue_contacts.append(residue_contact_atom_count)
-
-    print total_contacts
+        residue_contacts_unique = list(set(residue_contacts))
+        for item in residue_contacts_unique:
+            all_residue_contacts.append([residue, item, residue_contacts.count(item)])
+    return all_residue_contacts
 
 if __name__ == "__main__":
     main(sys.argv)
