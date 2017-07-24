@@ -38,10 +38,19 @@ def main(argv):
             print number + 2173
         elif 157 <= number <= 367:
             print str(number - 155) + " A"
-        elif 368 <= number <= 582:
+        elif 368 <= number <= 450:
             print str(number - 367) + " B"
+        # residue 83 is followed by 83A, 83B, 83C
+        elif number == 451:
+            print "83A B"
+        elif number == 452:
+            print "83B B"
+        elif number == 453:
+            print "83C B"
+        elif 455 <= number <= 582:
+            print str(number - 370) + " B"
 
-    # to mutant numbering
+        # to mutant numbering
     else:
         if number > 2173:
             print number - 2173
