@@ -96,11 +96,31 @@ def main(argv):
     contact_outfiles = []
     with open(res_muta_contact_cpptraj, 'w') as out:
         for item in contact_residues:
-            contact_outfiles.append("contacts" + item + ".dat")
-            out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts" + item + ".dat distance 3.5 \n")
+            contact_outfiles.append("contacts_" + item + ".dat")
+            out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts_" + item + ".dat distance 3.5 \n")
         out.write("go")
 
     os.system('cpptraj -p ' + pdb_unmutated + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin_unmutated)
+
+    # get total of atomic contacts of residues contacting the mutation
+    residue_contacts = []
+    with open(contact_outfiles[0], 'r') as f:
+        residue = contact_outfiles[0].split('_')[1].split('.')[0]
+        print residue
+        for line in f:
+            if line[0] is not '#':
+                # get extra residue contacts
+                if "_:" + residue + "@" not in line:
+                    line = line.split(' ')
+                    line = filter(None, line)
+                    line = line[1].split("_")[1]
+                    line = line.split('@')[0]
+                    line = line.replace(':', '')
+                    residue_contacts.append(line)
+
+    residue_contact_atom_count = []
+    for item in residue_contacts:
+        residue_contact_atom_count.append([item, residue_contacts.count(item)])
 
 if __name__ == "__main__":
     main(sys.argv)
