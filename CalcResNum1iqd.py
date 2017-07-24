@@ -22,21 +22,34 @@ __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
 
 def main(argv):
-    parser = argparse.ArgumentParser(description='Convert a given residue number from 1iqd.pdb C domain (2174-2329) to '
-                                                 'range of mutated pdb (1-156)')
+    parser = argparse.ArgumentParser(description='Convert a given residue number from 1iqd.pdb '
+                                                 'to '
+                                                 'range of mutated pdb (e.g. 1-156 to 2174-2329 for C domain)')
     parser.add_argument('number', help='Residue number separated by whitespace that will be converted')
+    parser.add_argument('chain', help='chain')
 
     args = parser.parse_args()
 
     number = int(args.number)
 
-    if number > 2173:
-        print number - 2173
-    elif number < 157:
-        print number + 2173
-    else:
-        print "Number must be between 1 and 156 or 2173 and 2329"
+    # to 1iqd numbering
+    if (len(argv) == 2):
+        if number < 157:
+            print number + 2173
+        elif 157 <= number <= 367:
+            print str(number - 155) + " A"
+        elif 368 <= number <= 582:
+            print str(number - 367) + " B"
 
+    # to mutant numbering
+    else:
+        if number > 2173:
+            print number - 2173
+        elif 1 <= number <= 212:
+            if args.chain == "A":
+                print str(number + 155) + " A"
+            elif args.chain == "B":
+                print str(number + 367) + " B"
 
 if __name__ == "__main__":
     main(sys.argv)
