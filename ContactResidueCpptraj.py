@@ -45,9 +45,8 @@ def main(argv):
 
     # generate cpptraj infile to get contacting residues of the selected/mutated residue
     with open(contact_muta_res_cpptraj, 'w') as f:
-        f.write('strip :WAT\nnativecontacts :' + mutation + ' :1-50000 writecontacts ' + contact_muta_res_dat + ' '
-                                                                                                                'distance 3.5 '
-                                                                                                    '\ngo')
+        f.write('strip :WAT\nstrip @H*\nstrip @?H*\nnativecontacts :' + mutation + ' :1-50000 writecontacts ' +
+                contact_muta_res_dat + ' distance 4.0\ngo')
 
     # run cpptraj
     os.system('cpptraj -p ' + pdb_unmutated + ' -y ' + trajin_unmutated + ' -i ' + contact_muta_res_cpptraj)
@@ -103,6 +102,9 @@ def main(argv):
     total1 = 0
     total2 = 0
     total_mutation = 0
+    c23 = []
+    c188 = []
+
     for triple1 in occupancy1:
         for triple2 in occupancy2:
             if triple1[0] == triple2[0] and triple1[1] == triple2[1]:
@@ -113,10 +115,12 @@ def main(argv):
                 print triple1[0] + " " + triple1[1] + " " + str(diff)
                 if triple2[1] == mutation:
                     total_mutation += triple2[2] - triple1[2]
-
+                if triple1[1] == "23":
+                    c23.append(triple1)
     print "total unmutated " + str(total1)
     print "total mutated " + str(total2)
     print "total mutation " + str(total_mutation)
+    print c23
 
 def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
 
@@ -127,9 +131,8 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     with open(res_muta_contact_cpptraj, 'w') as out:
         for item in contact_residues:
             contact_outfiles.append("contacts_" + item + ".dat")
-            out.write("strip :WAT\nnativecontacts :" + item + " :1-50000 writecontacts contacts_" + item + ".dat "
-                                                                                                         "distance "
-                                                                                                     "3.5 \n")
+            out.write("strip :WAT\nstrip @H*\nstrip @?H*\nnativecontacts :" + item + " :1-50000 writecontacts contacts_" + item +
+                      ".dat distance 4.0\n")
         out.write("go")
 
     os.system('cpptraj -p ' + pdb + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin)
