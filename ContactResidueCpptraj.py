@@ -45,9 +45,8 @@ def main(argv):
 
     # generate cpptraj infile to get contacting residues of the selected/mutated residue
     with open(contact_muta_res_cpptraj, 'w') as f:
-        f.write('strip :WAT\nstrip @H*\nstrip :@?H*\nnativecontacts :' + mutation + ' :1-50000 writecontacts ' +
-                contact_muta_res_dat
-                + 'distance 3.5\ngo')
+        f.write('strip :WAT\nstrip @H*\nstrip @?H*\nnativecontacts :' + mutation + ' :1-50000 writecontacts ' +
+                contact_muta_res_dat + ' distance 4.0\ngo')
 
     # run cpptraj
     os.system('cpptraj -p ' + pdb_unmutated + ' -y ' + trajin_unmutated + ' -i ' + contact_muta_res_cpptraj)
@@ -132,8 +131,8 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
     with open(res_muta_contact_cpptraj, 'w') as out:
         for item in contact_residues:
             contact_outfiles.append("contacts_" + item + ".dat")
-            out.write("strip :WAT\nstrip @H*\nstrip :@?H*\nnativecontacts :" + item + " :1-50000 writecontacts contacts_" + item +
-                      ".dat distance 3.5\n")
+            out.write("strip :WAT\nstrip @H*\nstrip @?H*\nnativecontacts :" + item + " :1-50000 writecontacts contacts_" + item +
+                      ".dat distance 4.0\n")
         out.write("go")
 
     os.system('cpptraj -p ' + pdb + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin)
