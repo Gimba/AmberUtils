@@ -61,14 +61,13 @@ def main(argv):
                     line = line.replace(':', '')
                     contact_residues.append(line)
 
-    contact_residues = list(set(contact_residues))
 
     # store number/occupancy of contacting atoms
-    contact_atoms = []
+    contact_atom_count = []
     for item in contact_residues:
-        contact_atoms.append([item, contact_residues.count(item)])
+        contact_atom_count.append([item, contact_residues.count(item)])
 
-
+    contact_residues = list(set(contact_residues))
     # get contact count for mutated structure (not really necessary)
 
     # mutated = []
@@ -85,11 +84,11 @@ def main(argv):
     #                 line = line.replace(':', '')
     #                 mutated.append(line)
     #
-    # residues = list(set(mutated))
     #
     # mutated_atoms = []
     # for item in residues:
     #     mutated_atoms.append([item, mutated.count(item)])
+    # mutated = list(set(mutated))
 
     # generate cpptraj file to check contacts of residues designated by contact residues
     cpptraj = "contact_residues_" + mutation + ".cpptraj"
