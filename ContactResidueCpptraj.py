@@ -25,7 +25,8 @@ __docformat__ = "restructuredtext en"
 
 def main(argv):
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('contacts', help='unmutated structure')
+    parser.add_argument('pdb_unmutated')
+    parser.add_argument('contact_data', help='unmutated structure')
     parser.add_argument('mutation', help='mutated structure')
     args = parser.parse_args()
 
@@ -33,7 +34,7 @@ def main(argv):
 
     contacts = []
 
-    with open(args.contacts, 'r') as f:
+    with open(args.contact_data, 'r') as f:
         for line in f:
             if line[0] is not '#':
                 # get extra residue contacts
