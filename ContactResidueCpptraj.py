@@ -25,14 +25,14 @@ __docformat__ = "restructuredtext en"
 
 def main(argv):
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('pdb_unmutated')
-    parser.add_argument('contact_data', help='unmutated structure')
+    parser.add_argument('pdb_unmutated', help='unmutated structure')
+    parser.add_argument('contact_data', help='contact residues of mutated residue')
     parser.add_argument('mutation', help='mutated structure')
     args = parser.parse_args()
 
     # get contact count for unmutated structure
 
-    contacts = []
+    contact_residues = []
 
     with open(args.contact_data, 'r') as f:
         for line in f:
@@ -44,13 +44,13 @@ def main(argv):
                     line = line[1].split("_")[1]
                     line = line.split('@')[0]
                     line = line.replace(':', '')
-                    contacts.append(line)
+                    contact_residues.append(line)
 
-    contact_residues = list(set(contacts))
+    contact_residues = list(set(contact_residues))
 
     contact_atoms = []
     for item in contact_residues:
-        contact_atoms.append([item, contacts.count(item)])
+        contact_atoms.append([item, contact_residues.count(item)])
 
 
     # get contact count for mutated structure (not really necessary)
@@ -76,12 +76,14 @@ def main(argv):
     #     mutated_atoms.append([item, mutated.count(item)])
 
     # generate cpptraj file to check contacts of residues designated by contact residues
-    cpptraj = "contacts_" + args.mutation + ".cpptraj"
+    cpptraj = "contact_residues_" + args.mutation + ".cpptraj"
+
     with open(cpptraj, 'w') as out:
         for item in contact_residues:
             out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts" + item + ".dat distance 3.5 \n")
         out.write("go")
-    os.system('cpptraj -p ' + args.contacts + ' -i ' + cpptraj)
+
+    os.system('cpptraj -p ' + args.pdb_unmutated + ' -i ' + cpptraj)
 
 if __name__ == "__main__":
     main(sys.argv)
