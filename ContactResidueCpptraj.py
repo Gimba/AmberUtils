@@ -103,24 +103,29 @@ def main(argv):
     os.system('cpptraj -p ' + pdb_unmutated + ' -i ' + res_muta_contact_cpptraj + ' -y ' + trajin_unmutated)
 
     # get total of atomic contacts of residues contacting the mutation
-    residue_contacts = []
-    with open(contact_outfiles[0], 'r') as f:
-        residue = contact_outfiles[0].split('_')[1].split('.')[0]
-        print residue
-        for line in f:
-            if line[0] is not '#':
-                # get extra residue contacts
-                if "_:" + residue + "@" not in line:
-                    line = line.split(' ')
-                    line = filter(None, line)
-                    line = line[1].split("_")[1]
-                    line = line.split('@')[0]
-                    line = line.replace(':', '')
-                    residue_contacts.append(line)
 
-    residue_contact_atom_count = []
-    for item in residue_contacts:
-        residue_contact_atom_count.append([item, residue_contacts.count(item)])
+    # all_residue_contacts contains triples, first is the selected residue, second is a contacting residue,
+    # and third the number of contacts between the two residues
+    all_residue_contacts = []
+    for contact_file in contact_outfiles:
+        residue_contacts = []
+        residue = contact_file.split('_')[1].split('.')[0]
+        with open(contact_file, 'r') as f:
+            for line in f:
+                if line[0] is not '#':
+                    # get extra residue contacts
+                    if "_:" + residue + "@" not in line:
+                        line = line.split(' ')
+                        line = filter(None, line)
+                        line = line[1].split("_")[1]
+                        line = line.split('@')[0]
+                        line = line.replace(':', '')
+                        residue_contacts.append(line)
 
+        residue_contact_atom_count = []
+        for item in residue_contacts:
+            residue_contact_atom_count.append([residue,item, residue_contacts.count(item)])
+        all_residue_contacts.append(residue_contact_atom_count)
+    
 if __name__ == "__main__":
     main(sys.argv)
