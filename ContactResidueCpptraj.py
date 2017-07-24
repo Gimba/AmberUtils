@@ -18,14 +18,15 @@
 
 import sys
 import argparse
+import os
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
 
 def main(argv):
-    parser = argparse.ArgumentParser(description='Boxplot values')
-    parser.add_argument('contacts', help='unmutated contacts')
-    parser.add_argument('mutation', help='residue that got mutated')
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('contacts', help='unmutated structure')
+    parser.add_argument('mutation', help='mutated structure')
     args = parser.parse_args()
 
     # get contact count for unmutated structure
@@ -74,10 +75,12 @@ def main(argv):
     #     mutated_atoms.append([item, mutated.count(item)])
 
     # generate cpptraj file to check contacts of residues designated by contact residues
-    with open("contacts_" + args.mutation + ".cpptraj", 'w') as out:
-
+    cpptraj = "contacts_" + args.mutation + ".cpptraj"
+    with open(cpptraj, 'w') as out:
         for item in contact_residues:
-            out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts" + item + ".dat distance 3.5")
+            out.write("nativecontacts :" + item + " :1-5000 writecontacts contacts" + item + ".dat distance 3.5 \n")
+        out.write("go")
+    os.system('cpptraj -p ' + args.contacts + ' -i ' + cpptraj)
 
 if __name__ == "__main__":
     main(sys.argv)
