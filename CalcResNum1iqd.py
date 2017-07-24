@@ -26,7 +26,7 @@ def main(argv):
                                                  'to '
                                                  'range of mutated pdb (e.g. 1-156 to 2174-2329 for C domain)')
     parser.add_argument('number', help='Residue number separated by whitespace that will be converted')
-    parser.add_argument('chain', help='chain')
+    parser.add_argument('chain', nargs='?', help='chain')
 
     args = parser.parse_args()
 
