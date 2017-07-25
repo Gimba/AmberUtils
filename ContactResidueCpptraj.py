@@ -138,12 +138,24 @@ def main(argv):
                 lost_residue_contacts.append(triple)
                 print res1 + " " + res2 + " " + str(0 - triple[2])
 
-    print lost_residue_contacts
     contact_atoms = extract_contact_atoms(lost_residue_contacts, mutation)
-    get_atom_occupancy(contact_atoms, pdb_unmutated, trajin_unmutated)
+    atom_occupancy1 = get_atom_occupancy(contact_atoms, pdb_unmutated, trajin_unmutated)
+    atom_occupancy2 = get_atom_occupancy(contact_atoms, pdb_mutated, trajin_mutated)
 
-    print "total unmutated " + str(total1)
-    print "total mutated " + str(total2)
+    print lost_residue_contacts
+    print atom_occupancy1
+    print atom_occupancy2
+
+    for item1 in atom_occupancy1:
+        for item2 in atom_occupancy2:
+            atom1 = item1.split(' ')[0]
+            atom2 = item2.split(' ')[0]
+            occ1 = int(item1.split(' ')[1])
+            occ2 = int(item2.split(' ')[1])
+            if atom1 == atom2:
+                print atom1 + ' ' + str(occ2 - occ1)
+    # print "total unmutated " + str(total1)
+    # print "total mutated " + str(total2)
 
 
 def get_residue_occupancy(pdb, trajin, contact_residues, mutation):
@@ -215,8 +227,8 @@ def get_atom_occupancy(contact_atoms, pdb, trajin):
         with open(item + ".dat", 'r') as f:
             lines = f.read().splitlines()
             lines = [x for x in lines if not x.startswith('#')]
-            atom_occupancy.append(len(lines))
-    return atom_occupancy
+            atom_occupancy.append(item + " " + str(len(lines)))
+    return sorted(list(set(atom_occupancy)))
 
 
 if __name__ == "__main__":
