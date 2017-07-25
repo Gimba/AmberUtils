@@ -96,8 +96,12 @@ def main(argv):
     #     mutated_atoms.append([item, mutated.count(item)])
     # mutated = list(set(mutated))
 
-    occupancy1 = get_atom_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
+    # in this order to keed the files of the wild-type contacts
+    # mutation
     occupancy2 = get_atom_occupancy(pdb_mutated, trajin_mutated, contact_residues, mutation)
+
+    # wild-type
+    occupancy1 = get_atom_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
 
     total1 = 0
     total2 = 0
@@ -114,26 +118,30 @@ def main(argv):
                 # a negative value means that the initial structure has lost this number of contacts
                 diff = triple2[2] - triple1[2]
                 print triple1[0] + " " + triple1[1] + " " + str(diff)
-                if triple2[1] == mutation:
-                    total_mutation += triple2[2] - triple1[2]
 
     # manage lost contacts which show not up in mutated occupancy
     tuples1 = set(tuples1)
     tuples2 = set(tuples2)
 
+    # get all elements that are in tuples1 but not in tuples2
     lost_contacts = list(tuples1 - tuples2)
 
-    print "lost contacts"
+    lost_residue_contacts = []
+    print "lost contacts to mutated residue"
     for tuple in lost_contacts:
+        # retrieve triples from occupancy data
         res1 = tuple.split('_')[0]
         res2 = tuple.split('_')[1]
         for triple in occupancy1:
-             if triple[0] == res1 and triple[1] == res2:
-                 print res1 + " " + res2 + " " + str(0 - triple[2])
+            if triple[0] == res1 and triple[1] == res2 and triple[1] == '23':
+                total1 += triple2[2]
+                lost_residue_contacts.append(triple)
+                print res1 + " " + res2 + " " + str(0 - triple[2])
 
+    print lost_residue_contacts
+    print(extract_contact_atoms(lost_residue_contacts, mutation))
     print "total unmutated " + str(total1)
     print "total mutated " + str(total2)
-    print "total mutation " + str(total_mutation)
 
 
 def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
@@ -176,6 +184,17 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
         for item in residue_contacts_unique:
             all_residue_contacts.append([residue, item, residue_contacts.count(item)])
     return all_residue_contacts
+
+def extract_contact_atoms(lost_contact_atoms, mutation):
+    contact_atoms = []
+    for item in lost_contact_atoms:
+        residue = item[0]
+        with open("contacts_" + residue + ".dat", 'r') as f:
+            for line in f:
+                if "_:" + mutation + "@" in line:
+                    contact_atoms.append(line.split(':')[1])
+    return contact_atoms
+
 
 if __name__ == "__main__":
     main(sys.argv)
