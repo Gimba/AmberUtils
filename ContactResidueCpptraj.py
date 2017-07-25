@@ -19,6 +19,7 @@
 import sys
 import argparse
 import os
+import re
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
@@ -28,7 +29,8 @@ def main(argv):
     parser.add_argument('pdb_unmutated', help='unmutated structure')
     parser.add_argument('trajin_unmutated', help='trajectory for unmutated structure')
     parser.add_argument('pdb_mutated', help='mutated structure')
-    parser.add_argument('trajin_mutated', help='trajectory for mutated structure')
+    parser.add_argument('trajin_mutated_init', help='trajectory for mutated structure')
+    parser.add_argument('trajin_mutated_simulation', help='trajectory for mutated structure after simulation')
     parser.add_argument('mutation', help='mutated structure')
     args = parser.parse_args()
 
@@ -37,7 +39,8 @@ def main(argv):
     pdb_unmutated = args.pdb_unmutated
 
     pdb_mutated = args.pdb_mutated
-    trajin_mutated = args.trajin_mutated
+    trajin_mutated_init = args.trajin_mutated_init
+    trajin_mutated_simulation = args.trajin_mutated_simulation
     unmutated_name = pdb_unmutated.split('.')[0]
 
     contact_muta_res_dat = unmutated_name + '_' + mutation + '_contacts.dat'
@@ -98,7 +101,7 @@ def main(argv):
 
     # in this order to keed the files of the wild-type contacts
     # mutation
-    occupancy2 = get_residue_occupancy(pdb_mutated, trajin_mutated, contact_residues, mutation)
+    occupancy2 = get_residue_occupancy(pdb_mutated, trajin_mutated_init, contact_residues, mutation)
 
     # wild-type
     occupancy1 = get_residue_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
@@ -139,8 +142,9 @@ def main(argv):
                 print res1 + " " + res2 + " " + str(0 - triple[2])
 
     contact_atoms = extract_contact_atoms(lost_residue_contacts, mutation)
+    contact_atoms = list(set(contact_atoms))
     atom_occupancy1 = get_atom_occupancy(contact_atoms, pdb_unmutated, trajin_unmutated)
-    atom_occupancy2 = get_atom_occupancy(contact_atoms, pdb_mutated, trajin_mutated)
+    atom_occupancy2 = get_atom_occupancy(contact_atoms, pdb_mutated, trajin_mutated_simulation)
 
     print lost_residue_contacts
     print atom_occupancy1
@@ -148,12 +152,12 @@ def main(argv):
 
     for item1 in atom_occupancy1:
         for item2 in atom_occupancy2:
-            atom1 = item1.split(' ')[0]
-            atom2 = item2.split(' ')[0]
-            occ1 = int(item1.split(' ')[1])
-            occ2 = int(item2.split(' ')[1])
-            if atom1 == atom2:
-                print atom1 + ' ' + str(occ2 - occ1)
+            item1 = item1.replace('.dat','')
+            i1 = re.split('_|\.| ', item1)
+            item2 = item2.replace('.dat', '')
+            i2 = re.split('_|\.| ', item2)
+            if i1[1] == i2[1]:
+                print i1[1] + ' ' + str(int(i2[2]) - int(i1[2]))
     # print "total unmutated " + str(total1)
     # print "total mutated " + str(total2)
 
@@ -215,16 +219,19 @@ def get_atom_occupancy(contact_atoms, pdb, trajin):
 
     cpptraj = 'contact_atoms.cpptraj'
 
+    outfiles = []
     with open(cpptraj, 'w') as f:
-        f.write('strip :WAT\nstrip @H*\nstrip @?H*\n')
+        f.write("strip :WAT\nstrip @H*\nstrip @?H*\n")
         for item in contact_atoms:
-            f.write("nativecontacts :" + item + " :1-50000 writecontacts " + item + ".dat distance 3.9\n")
-        f.write('go')
+            outfile_name = pdb.split('.')[0] + "_" + item + ".dat"
+            outfiles.append(outfile_name)
+            f.write("nativecontacts :" + item + " :1-50000 writecontacts " + outfile_name + " distance 3.9\n")
+        f.write("go")
     os.system('cpptraj -p ' + pdb + ' -y ' + trajin + ' -i ' + cpptraj)
 
     atom_occupancy = []
-    for item in contact_atoms:
-        with open(item + ".dat", 'r') as f:
+    for item in outfiles:
+        with open(item, 'r') as f:
             lines = f.read().splitlines()
             lines = [x for x in lines if not x.startswith('#')]
             atom_occupancy.append(item + " " + str(len(lines)))
