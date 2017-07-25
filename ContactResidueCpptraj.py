@@ -98,10 +98,10 @@ def main(argv):
 
     # in this order to keed the files of the wild-type contacts
     # mutation
-    occupancy2 = get_atom_occupancy(pdb_mutated, trajin_mutated, contact_residues, mutation)
+    occupancy2 = get_residue_occupancy(pdb_mutated, trajin_mutated, contact_residues, mutation)
 
     # wild-type
-    occupancy1 = get_atom_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
+    occupancy1 = get_residue_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation)
 
     total1 = 0
     total2 = 0
@@ -139,12 +139,14 @@ def main(argv):
                 print res1 + " " + res2 + " " + str(0 - triple[2])
 
     print lost_residue_contacts
-    print(extract_contact_atoms(lost_residue_contacts, mutation))
+    contact_atoms = extract_contact_atoms(lost_residue_contacts, mutation)
+    get_atom_occupancy(contact_atoms, pdb_unmutated, trajin_unmutated)
+
     print "total unmutated " + str(total1)
     print "total mutated " + str(total2)
 
 
-def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
+def get_residue_occupancy(pdb, trajin, contact_residues, mutation):
 
     res_muta_contact_cpptraj = "contact_residues_" + mutation + ".cpptraj"
 
@@ -185,6 +187,7 @@ def get_atom_occupancy(pdb, trajin, contact_residues, mutation):
             all_residue_contacts.append([residue, item, residue_contacts.count(item)])
     return all_residue_contacts
 
+
 def extract_contact_atoms(lost_contact_atoms, mutation):
     contact_atoms = []
     for item in lost_contact_atoms:
@@ -192,8 +195,28 @@ def extract_contact_atoms(lost_contact_atoms, mutation):
         with open("contacts_" + residue + ".dat", 'r') as f:
             for line in f:
                 if "_:" + mutation + "@" in line:
-                    contact_atoms.append(line.split(':')[1])
+                    contact_atoms.append(line.split(':')[1].replace('_',''))
     return contact_atoms
+
+
+def get_atom_occupancy(contact_atoms, pdb, trajin):
+
+    cpptraj = 'contact_atoms.cpptraj'
+
+    with open(cpptraj, 'w') as f:
+        f.write('strip :WAT\nstrip @H*\nstrip @?H*\n')
+        for item in contact_atoms:
+            f.write("nativecontacts :" + item + " :1-50000 writecontacts " + item + ".dat distance 3.9\n")
+        f.write('go')
+    os.system('cpptraj -p ' + pdb + ' -y ' + trajin + ' -i ' + cpptraj)
+
+    atom_occupancy = []
+    for item in contact_atoms:
+        with open(item + ".dat", 'r') as f:
+            lines = f.read().splitlines()
+            lines = [x for x in lines if not x.startswith('#')]
+            atom_occupancy.append(len(lines))
+    return atom_occupancy
 
 
 if __name__ == "__main__":
