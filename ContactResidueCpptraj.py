@@ -136,7 +136,7 @@ def main(argv):
         res1 = tuple.split('_')[0]
         res2 = tuple.split('_')[1]
         for triple in occupancy1:
-            if triple[0] == res1 and triple[1] == res2 and triple[1] == '23':
+            if triple[0] == res1 and triple[1] == res2 and triple[1] == mutation:
                 total1 += triple2[2]
                 lost_residue_contacts.append(triple)
                 print res1 + " " + res2 + " " + str(0 - triple[2])
