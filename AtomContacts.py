@@ -96,6 +96,12 @@ def main(argv):
     # those ones that changed their occupancy as an effect of mutation or simulation
     interesting = get_interesting_atoms(occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim)
 
+    interesting = convert_res_numbers(interesting)
+    occupancy_atoms_init = convert_res_numbers(occupancy_atoms_init)
+    occupancy_atoms_muta_init = convert_res_numbers(occupancy_atoms_muta_init)
+    occupancy_atoms_muta_sim = convert_res_numbers(occupancy_atoms_muta_sim)
+
+    output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim, interesting)
 
 def get_interesting_atoms(init, muta, sim):
     init_muta = list(set(init)^set(muta))
@@ -217,7 +223,7 @@ def output_results(trajin, init, muta, prod, all_interesting):
     all_atoms = init + muta + prod
     all_atoms = sorted(list(set(all_atoms)))
 
-    all_atoms = list(set(all_atoms) & set(all_interesting))
+    all_atoms = sorted(list(set(all_atoms) & set(all_interesting)))
 
     init_total = 0
     muta_total = 0
@@ -239,10 +245,10 @@ def output_results(trajin, init, muta, prod, all_interesting):
             output = output + "0, "
 
         if item in prod:
-            output = output + "1, "
+            output = output + "1"
             prod_total += 1
         else:
-            output = output + "0, "
+            output = output + "0"
 
         output = output + "\n"
     output = output + "total:, "
