@@ -16,12 +16,13 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import sys
 import argparse
 import os
 import re
-import CalcResNum1iqd
+import sys
 from collections import Counter
+
+import CalcResNum1iqd
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
@@ -91,49 +92,16 @@ def main(argv):
     occupancy_atoms_muta_sim = get_atom_contacts(muta_atom_occupancy_sim[1], '')
     sim = get_atom_occupancy(occupancy_atoms_muta_sim)
 
+    # find atoms that are not present in all three data sets. The resulting list of interesting atoms contains only
+    # those ones that changed their occupancy as an effect of mutation or simulation
+    interesting = get_interesting_atoms(occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim)
 
 
-
-    # model_contacts = create_contact_cpptraj(trajin_unmutated, residues, [mutation])
-    # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
-
-
-    # model_contacts_init = create_contact_cpptraj(trajin_unmutated, atoms, ['1-5000'])
-    # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts_init[0])
-    # contact_atoms_init = get_atom_contacts(model_contacts_init[1], '')
-    # contact_atoms_init = convert_res_numbers(contact_atoms_init)
-    contact_atoms_init = flip_residues(contact_atoms_init)
-
-    # get mutation init contacts
-    # muta_contacts_init = create_contact_cpptraj(trajin_mutated_init, residues, ['1-5000'])
-    # run_cpptraj(pdb_mutated, trajin_mutated_init, muta_contacts_init[0])
-    # contact_atoms_muta_init = get_atom_contacts(muta_contacts_init[1],'')
-    # contact_atoms_muta_init = convert_res_numbers(contact_atoms_muta_init)
-
-    # get mutation sim contacts
-    # muta_contacts_sim = create_contact_cpptraj(trajin_mutated_sim, residues, ['1-5000'])
-    # run_cpptraj(pdb_mutated, trajin_mutated_sim, muta_contacts_sim[0])
-    # contact_atoms_muta_sim = get_atom_contacts(muta_contacts_sim[1], '')
-    # contact_atoms_muta_sim = convert_res_numbers(contact_atoms_muta_sim)
-
-    # compare results
-    # lost_contacts_init = list(set(contact_atoms_init) - set(contact_atoms_muta_init))
-    # new_contacts_init = list(set(contact_atoms_muta_init) - set(contact_atoms_init))
-    #
-    # lost_contacts_sim = list(set(contact_atoms_init) - set(contact_atoms_muta_sim))
-    # new_contacts_sim = list(set(contact_atoms_muta_sim) - set(contact_atoms_init))
-
-    # print sorted(lost_contacts_init)
-    # print sorted(lost_contacts_sim)
-    #
-    # all_interesting = lost_contacts_sim + lost_contacts_init + new_contacts_init + new_contacts_sim
-    # all_interesting = list(set(all_interesting))
-
-    # output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], contact_atoms_init,
-    #                contact_atoms_muta_init, contact_atoms_muta_sim, lost_contacts_init)
-
-    # output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], contact_atoms_init,
-    #                contact_atoms_muta_init, contact_atoms_muta_sim)
+def get_interesting_atoms(init, muta, sim):
+    init_muta = list(set(init)^set(muta))
+    init_sim = list(set(init)^set(sim))
+    interesting = list(set(init_muta + init_sim))
+    return interesting
 
 
 def get_atom_occupancy(occupancy_atoms):
@@ -177,6 +145,7 @@ def extract_atoms(contact_atoms):
     out = list(set(out))
 
     return out
+
 
 def extract_residues(contact_atoms):
     contact_residues = []
