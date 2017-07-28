@@ -21,6 +21,7 @@ import argparse
 import os
 import re
 import CalcResNum1iqd
+from collections import Counter
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
@@ -63,11 +64,18 @@ def main(argv):
     model_contacts = create_contact_cpptraj(trajin_unmutated, [mutation], ['1-5000'])
     run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
     contact_atoms_init = get_atom_contacts(model_contacts[1], mutation)
-    residues = extract_residues(contact_atoms_init)
+    # residues = extract_residues(contact_atoms_init)
 
 
     # get atoms of contacting residues in contact with mutation residue
     atoms = extract_atoms(contact_atoms_init)
+
+
+    # get occupancy of atoms contacting mutation residue
+    model_atom_occupancy = create_contact_cpptraj(trajin_unmutated, atoms, ['1-5000'])
+    run_cpptraj(pdb_unmutated, trajin_unmutated, model_atom_occupancy[0])
+    occupancy_atoms_init = get_atom_contacts(model_contacts[1], '')
+    get_atom_occupancy(occupancy_atoms_init)
 
 
     # model_contacts = create_contact_cpptraj(trajin_unmutated, residues, [mutation])
@@ -81,35 +89,43 @@ def main(argv):
     contact_atoms_init = flip_residues(contact_atoms_init)
 
     # get mutation init contacts
-    muta_contacts_init = create_contact_cpptraj(trajin_mutated_init, residues, ['1-5000'])
-    run_cpptraj(pdb_mutated, trajin_mutated_init, muta_contacts_init[0])
-    contact_atoms_muta_init = get_atom_contacts(muta_contacts_init[1],'')
-    contact_atoms_muta_init = convert_res_numbers(contact_atoms_muta_init)
+    # muta_contacts_init = create_contact_cpptraj(trajin_mutated_init, residues, ['1-5000'])
+    # run_cpptraj(pdb_mutated, trajin_mutated_init, muta_contacts_init[0])
+    # contact_atoms_muta_init = get_atom_contacts(muta_contacts_init[1],'')
+    # contact_atoms_muta_init = convert_res_numbers(contact_atoms_muta_init)
 
     # get mutation sim contacts
-    muta_contacts_sim = create_contact_cpptraj(trajin_mutated_sim, residues, ['1-5000'])
-    run_cpptraj(pdb_mutated, trajin_mutated_sim, muta_contacts_sim[0])
-    contact_atoms_muta_sim = get_atom_contacts(muta_contacts_sim[1], '')
-    contact_atoms_muta_sim = convert_res_numbers(contact_atoms_muta_sim)
+    # muta_contacts_sim = create_contact_cpptraj(trajin_mutated_sim, residues, ['1-5000'])
+    # run_cpptraj(pdb_mutated, trajin_mutated_sim, muta_contacts_sim[0])
+    # contact_atoms_muta_sim = get_atom_contacts(muta_contacts_sim[1], '')
+    # contact_atoms_muta_sim = convert_res_numbers(contact_atoms_muta_sim)
 
     # compare results
-    lost_contacts_init = list(set(contact_atoms_init) - set(contact_atoms_muta_init))
-    new_contacts_init = list(set(contact_atoms_muta_init) - set(contact_atoms_init))
+    # lost_contacts_init = list(set(contact_atoms_init) - set(contact_atoms_muta_init))
+    # new_contacts_init = list(set(contact_atoms_muta_init) - set(contact_atoms_init))
+    #
+    # lost_contacts_sim = list(set(contact_atoms_init) - set(contact_atoms_muta_sim))
+    # new_contacts_sim = list(set(contact_atoms_muta_sim) - set(contact_atoms_init))
 
-    lost_contacts_sim = list(set(contact_atoms_init) - set(contact_atoms_muta_sim))
-    new_contacts_sim = list(set(contact_atoms_muta_sim) - set(contact_atoms_init))
+    # print sorted(lost_contacts_init)
+    # print sorted(lost_contacts_sim)
+    #
+    # all_interesting = lost_contacts_sim + lost_contacts_init + new_contacts_init + new_contacts_sim
+    # all_interesting = list(set(all_interesting))
 
-    print sorted(lost_contacts_init)
-    print sorted(lost_contacts_sim)
-
-    all_interesting = lost_contacts_sim + lost_contacts_init + new_contacts_init + new_contacts_sim
-    all_interesting = list(set(all_interesting))
-
-    output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], contact_atoms_init,
-                   contact_atoms_muta_init, contact_atoms_muta_sim, lost_contacts_init)
+    # output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], contact_atoms_init,
+    #                contact_atoms_muta_init, contact_atoms_muta_sim, lost_contacts_init)
 
     # output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], contact_atoms_init,
     #                contact_atoms_muta_init, contact_atoms_muta_sim)
+
+
+def get_atom_occupancy(occupancy_atoms):
+    occupancy_atoms = [item.split('_')[0] for item in occupancy_atoms]
+    out = Counter(occupancy_atoms)
+    out = out.items()
+    return out
+
 
 def get_atom_contacts(data_file, residue):
     contact_atoms = []
