@@ -59,12 +59,20 @@ def main(argv):
     os.system("cp " + trajin_mutated_sim + " " + results_folder)
     os.chdir(os.getcwd() + '/' + results_folder)
 
-    # get model contacts
+    # get residues contacting the mutation residue
     model_contacts = create_contact_cpptraj(trajin_unmutated, [mutation], ['1-5000'])
     run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
     contact_atoms_init = get_atom_contacts(model_contacts[1], mutation)
     residues = extract_residues(contact_atoms_init)
+
+
+    # get atoms of contacting residues in contact with mutation residue
     atoms = extract_atoms(contact_atoms_init)
+
+
+    # model_contacts = create_contact_cpptraj(trajin_unmutated, residues, [mutation])
+    # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
+
 
     # model_contacts_init = create_contact_cpptraj(trajin_unmutated, atoms, ['1-5000'])
     # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts_init[0])
@@ -124,19 +132,19 @@ def get_atom_contacts(data_file, residue):
 
 
 def extract_atoms(contact_atoms):
-    contact_atoms = []
+    out = []
 
     for item in contact_atoms:
         # :23@N_:22@O -> :22@O
         item = item.split('_')[1]
         # :22@O -> 22@O
         item = item.replace(':', '')
-        contact_atoms.append(item)
+        out.append(item)
 
     # consolidate same residues
-    contact_atoms = list(set(contact_atoms))
+    out = list(set(out))
 
-    return contact_atoms
+    return out
 
 def extract_residues(contact_atoms):
     contact_residues = []
