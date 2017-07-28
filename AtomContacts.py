@@ -75,14 +75,24 @@ def main(argv):
     model_atom_occupancy = create_contact_cpptraj(trajin_unmutated, atoms, ['1-5000'])
     run_cpptraj(pdb_unmutated, trajin_unmutated, model_atom_occupancy[0])
     occupancy_atoms_init = get_atom_contacts(model_contacts[1], '')
-    get_atom_occupancy(occupancy_atoms_init)
+    init = get_atom_occupancy(occupancy_atoms_init)
 
 
     # get occupancy of atoms contating mutation residue after mutation
     muta_atom_occupancy = create_contact_cpptraj(trajin_mutated_init, atoms, ['1-5000'])
     run_cpptraj(pdb_mutated, trajin_mutated_init, muta_atom_occupancy[0])
     occupancy_atoms_muta_init = get_atom_contacts(muta_atom_occupancy[1], '')
-    get_atom_occupancy(occupancy_atoms_muta_init)
+    muta = get_atom_occupancy(occupancy_atoms_muta_init)
+
+
+    # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
+    muta_atom_occupancy_sim = create_contact_cpptraj(trajin_mutated_sim, atoms, ['1-5000'])
+    run_cpptraj(pdb_mutated, trajin_mutated_sim, muta_atom_occupancy_sim[0])
+    occupancy_atoms_muta_sim = get_atom_contacts(muta_atom_occupancy_sim[1], '')
+    sim = get_atom_occupancy(occupancy_atoms_muta_sim)
+
+
+
 
     # model_contacts = create_contact_cpptraj(trajin_unmutated, residues, [mutation])
     # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
