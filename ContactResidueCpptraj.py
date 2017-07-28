@@ -20,9 +20,11 @@ import sys
 import argparse
 import os
 import re
+import CalcResNum1iqd
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
+
 
 def main(argv):
     parser = argparse.ArgumentParser(description='')
@@ -45,23 +47,22 @@ def main(argv):
     trajin_mutated_init = args.trajin_mutated_init
     trajin_mutated_simulation = args.trajin_mutated_simulation
 
-    results_folder ='contacts_' + unmutated_name + '_' + mutated_name + '/'
+    results_folder = 'contacts_' + unmutated_name + '_' + mutated_name + '/'
 
     contact_muta_res_dat = results_folder + unmutated_name + '_' + mutated_name + '_contacts.dat'
     contact_muta_res_cpptraj = results_folder + unmutated_name + '_' + mutated_name + '.cpptraj'
 
-
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    contact_residues = get_contacting_residues(contact_muta_res_cpptraj, mutation, contact_muta_res_dat,
+    contact_atoms = get_contacting_residues(contact_muta_res_cpptraj, mutation, contact_muta_res_dat,
                                                pdb_unmutated, trajin_unmutated)
 
     # wild-type
-    occupancy1 = get_residue_occupancy(pdb_unmutated, trajin_unmutated, contact_residues, mutation, results_folder)
+    occupancy1 = get_atom_contacts(pdb_unmutated, trajin_unmutated, contact_atoms, mutation, results_folder)
 
     # mutant
-    occupancy2 = get_residue_occupancy(pdb_mutated, trajin_mutated_init, contact_residues, mutation, results_folder)
+    occupancy2 = get_atom_contacts(pdb_mutated, trajin_mutated_init, contact_atoms, mutation, results_folder)
 
     total1 = 0
     total2 = 0
@@ -98,29 +99,47 @@ def main(argv):
 
     contact_atoms = extract_contact_atoms(lost_residue_contacts, mutation, results_folder, pdb_unmutated)
     contact_atoms = list(set(contact_atoms))
-    atom_occupancy1 = get_atom_occupancy(contact_atoms, pdb_unmutated, trajin_unmutated, results_folder)
-    atom_occupancy2 = get_atom_occupancy(contact_atoms, pdb_mutated, trajin_mutated_simulation, results_folder)
+    atom_occupancy_unmutated = get_atom_occupancy(contact_atoms, pdb_unmutated, trajin_unmutated, results_folder)
+    atom_occupancy_init = get_atom_occupancy(contact_atoms, pdb_mutated, trajin_mutated_init, results_folder)
+    atom_occupancy_prod = get_atom_occupancy(contact_atoms, pdb_mutated, trajin_mutated_simulation, results_folder)
 
-    print lost_residue_contacts
-    print atom_occupancy1
-    print atom_occupancy2
+    output = "atom \t " + trajin_unmutated + " \t " + trajin_mutated_init + " \t " + trajin_mutated_simulation + " \t " \
+                                                                                                                 "diff \n"
+    total_diff = 0
+    for i in range(0, len(atom_occupancy_unmutated)):
+        item1 = atom_occupancy_unmutated[i]
+        item2 = atom_occupancy_init[i]
+        item3 = atom_occupancy_prod[i]
 
-    for item1 in atom_occupancy1:
-        for item2 in atom_occupancy2:
-            item1 = item1.replace('.dat','')
-            i1 = re.split('_|\.| ', item1)
-            item2 = item2.replace('.dat', '')
-            i2 = re.split('_|\.| ', item2)
-            if i1[3] == i2[3]:
-                print i1[3] + ' ' + str(int(i2[4]) - int(i1[4]))
-    # print "total unmutated " + str(total1)
-    # print "total mutated " + str(total2)
+        item1 = item1.replace('.dat', '')
+        i1 = re.split('_|\.| ', item1)
+        item2 = item2.replace('.dat', '')
+        i2 = re.split('_|\.| ', item2)
+        item3 = item3.replace('.dat', '')
+        i3 = re.split('_|\.| ', item3)
+        if i1[3] == i3[3]:
+            diff = int(i3[4]) - int(i1[4])
+            atom = i1[3].split('@')
+            atom[0] = CalcResNum1iqd.convert(atom[0], 1)
+            output = output + str(atom[0]) + "@" + atom[1] + " \t " + i1[4] + " \t " + i2[4] + " \t " + i3[4] + " \t "
+            + str(diff) + " \n"
+            total_diff = total_diff + diff
+
+    output = output + "\t\t\ttotal\t" + str(total_diff) + "\n"
+
+    print output
+
+    outfile = unmutated_name + "_" + mutated_name + "_results.dat"
+
+    with open(outfile, 'w') as f:
+        f.write(output)
 
 
-def get_contacting_residues(contact_muta_res_cpptraj, mutation, contact_muta_res_dat, pdb_unmutated, trajin_unmutated ):
+def get_contacting_residues(contact_muta_res_cpptraj, mutation, contact_muta_res_dat, pdb_unmutated, trajin_unmutated):
     # generate cpptraj infile to get contacting residues of the selected/mutated residue
     with open(contact_muta_res_cpptraj, 'w') as f:
-        f.write('strip :WAT\nstrip @H*\nstrip @?H*\nnativecontacts :' + mutation + ' :1-50000 writecontacts ' +
+        f.write('strip :WAT\nstrip @H*\nstrip @?H*\n')
+        f.write('nativecontacts :' + mutation + ' :1-50000 writecontacts ' +
                 contact_muta_res_dat + ' distance 3.9\ngo')
 
     # run cpptraj to create a file that contains all the residues (with atoms) in contact with the specified mutation
@@ -128,41 +147,41 @@ def get_contacting_residues(contact_muta_res_cpptraj, mutation, contact_muta_res
     os.system('cpptraj -p ' + pdb_unmutated + ' -y ' + trajin_unmutated + ' -i ' + contact_muta_res_cpptraj)
 
     # get contact residues and occupancy of atoms for unmutated structure from contact_data file generated by cpptraj
-    contact_residues = []
+    contact_atoms = []
     with open(contact_muta_res_dat, 'r') as f:
         for line in f:
             if line[0] is not '#':
                 # get lines which do not contain the mutation residue as contact itself (only consider extra mutation
                 #  residue contacts)
                 if "_:" + mutation + "@" not in line:
-
                     # extract residue number from line
                     line = line.split(' ')
                     line = filter(None, line)
-                    line = line[1].split("_")[1]
-                    line = line.split('@')[0]
-                    line = line.replace(':', '')
-                    contact_residues.append(line)
-
+                    # line = line[1].split("_")[1]
+                    # line = line.split('@')[0]
+                    # line = line.replace(':', '')
+                    line = line[1]
+                    contact_atoms.append(line)
 
     # store number of contacts of a selected residue with mutation residue
     contact_atom_count = []
-    for item in contact_residues:
-        contact_atom_count.append([item, contact_residues.count(item)])
+    for item in contact_atoms:
+        contact_atom_count.append([item, contact_atoms.count(item)])
 
-    contact_residues = list(set(contact_residues))
+    contact_atoms = list(set(contact_atoms))
 
-    return contact_residues
+    return contact_atoms
 
-def get_residue_occupancy(pdb, trajin, contact_residues, mutation, results_folder):
 
+def get_atom_contacts(pdb, trajin, contact_atoms, mutation, results_folder):
     res_muta_contact_cpptraj = results_folder + pdb.split('.')[0] + "contact_residues_" + mutation + ".cpptraj"
 
     # generate cpptraj to get contacts of residues in contact with the mutation
     contact_outfiles = []
     with open(res_muta_contact_cpptraj, 'w') as out:
         out.write('strip :WAT\nstrip @H*\nstrip @?H*\n')
-        for item in contact_residues:
+        for item in contact_atoms:
+            item = item.split('_')[0].replace(':','')
             outfile = results_folder + pdb.split('.')[0] + "_contacts_" + item + ".dat"
             contact_outfiles.append(outfile)
             out.write("nativecontacts :" + item + " :1-50000 writecontacts " + outfile + " distance 3.9\n")
@@ -185,9 +204,10 @@ def get_residue_occupancy(pdb, trajin, contact_residues, mutation, results_folde
                     if "_:" + residue + "@" not in line:
                         line = line.split(' ')
                         line = filter(None, line)
-                        line = line[1].split("_")[1]
-                        line = line.split('@')[0]
-                        line = line.replace(':', '')
+                        line = line[1]
+                        # line = line[1].split("_")[1]
+                        # line = line.split('@')[0]
+                        # line = line.replace(':', '')
                         residue_contacts.append(line)
 
         residue_contacts_unique = list(set(residue_contacts))
@@ -208,7 +228,6 @@ def extract_contact_atoms(lost_contact_atoms, mutation, results_folder, pdb):
 
 
 def get_atom_occupancy(contact_atoms, pdb, trajin, results_folder):
-
     cpptraj = results_folder + 'contact_atoms.cpptraj'
 
     outfiles = []
