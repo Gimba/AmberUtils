@@ -103,6 +103,22 @@ def main(argv):
 
     output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim, interesting)
 
+
+# returns amount of distance change
+def quantify_distances():
+    pass
+
+
+# returns spatially sorted distance list
+def spatialize_distances():
+    pass
+
+
+# show trend over time
+def trendify_distances():
+    pass
+
+
 def get_interesting_atoms(init, muta, sim):
     init_muta = list(set(init)^set(muta))
     init_sim = list(set(init)^set(sim))
