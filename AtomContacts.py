@@ -67,7 +67,6 @@ def main(argv):
     contact_atoms_init = get_atom_contacts(model_contacts[1], mutation)
     # residues = extract_residues(contact_atoms_init)
 
-
     # get atoms of contacting residues in contact with mutation residue
     atoms = extract_atoms(contact_atoms_init)
 
@@ -92,6 +91,15 @@ def main(argv):
     occupancy_atoms_muta_sim = get_atom_contacts(muta_atom_occupancy_sim[1], '')
     sim = get_atom_occupancy(occupancy_atoms_muta_sim)
 
+    # get total distances of mutation contacting atoms
+    total_dist_init = quantify_distances(model_atom_occupancy[1])
+    total_dist_muta = quantify_distances(muta_atom_occupancy[1])
+    total_dist_sim = quantify_distances(muta_atom_occupancy_sim[1])
+
+    # categorize distances of contacts
+    init_muta_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy[1])
+    init_sim_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy_sim[1])
+
     # find atoms that are not present in all three data sets. The resulting list of interesting atoms contains only
     # those ones that changed their occupancy as an effect of mutation or simulation
     interesting = get_interesting_atoms(occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim)
@@ -105,8 +113,88 @@ def main(argv):
 
 
 # returns amount of distance change
-def quantify_distances():
-    pass
+def quantify_distances(contacts_data):
+
+    distances = []
+
+    with open(contacts_data, 'r') as f:
+        count = 0
+        last_atom = ""
+        for line in f:
+            if line[0] is not '#':
+                line = line.split()
+                atom = line[1].split('_')
+                atom = atom[0].replace(':', '')
+                dist = line[4]
+                if last_atom == "":
+                    last_atom = atom
+                if last_atom != atom:
+                    distances.append([atom, count])
+                    count = 0
+                    last_atom = atom
+                else:
+                    count = count + float(dist)
+    return distances
+
+# return amount fo distance lost in each distance category
+def quantify_distances_of_contacts(data1, data2):
+    data1_categorized = categorize_contacts(data1)
+    data2_categorized = categorize_contacts(data2)
+
+    data1_top_keys = [item[0] for item in data1_categorized[0]]
+    # # data1_top_values = [item[1] for item in data1_categorized[0]]
+    #
+    data2_top_keys = [item[0] for item in data2_categorized[0]]
+
+    lost_top = non_mutual(data1_categorized[0], data2_categorized[0])
+    gain_top = non_mutual(data2_categorized[0], data1_categorized[0])
+
+    lost_middle = non_mutual(data1_categorized[1], data2_categorized[1])
+    gain_middle = non_mutual(data2_categorized[1], data1_categorized[1])
+
+    lost_bottom = non_mutual(data1_categorized[2], data2_categorized[2])
+    gain_bottom = non_mutual(data2_categorized[2], data1_categorized[2])
+
+    return [lost_top, gain_top, lost_middle, gain_middle, lost_bottom, gain_bottom]
+
+
+# expecting lists with keys in first and values in second column
+def non_mutual(list1, list2):
+    keys1 = [item[0] for item in list1]
+    keys2 = [item[0] for item in list2]
+    non_mutuals = list(set(keys1) ^ set(keys2))
+
+    out = []
+
+    for item1 in non_mutuals:
+        for item2 in list1:
+            if item1 == item2[0]:
+                out.append(item2)
+
+    return out
+
+
+def categorize_contacts(contacts_data):
+    top = []
+    middle = []
+    bottom = []
+
+    with open(contacts_data, 'r') as f:
+        for line in f:
+            if line[0] is not '#':
+                line = line.split()
+                atom = line[1]
+                dist = float(line[4])
+
+                # categorize contacts due to distance
+                if dist > 3.8:
+                    top.append([atom, dist])
+                elif dist > 2.5:
+                    middle.append([atom, dist])
+                else:
+                    bottom.append([atom, dist])
+
+    return [top, middle, bottom]
 
 
 # returns spatially sorted distance list
