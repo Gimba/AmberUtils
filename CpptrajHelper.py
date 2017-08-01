@@ -11,9 +11,10 @@ def read_cpptraj_contacts_data(file_name):
             if line[0] is not '#':
                 line = line.split()
                 atom = line[1].replace(':', '')
-                atom = atom[1].split('_')
+                atom = atom.split('_')
                 dist = float(line[4])
-                out.append([atom, dist])
+                if atom[0] != atom[1]:
+                    out.append([atom, dist])
     return out
 
 
