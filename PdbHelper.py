@@ -20,7 +20,7 @@ def read_pdb_atoms(pdb_file):
     return out
 
 
-# returns a list of atom types of a pdb
+# returns a list of atom types of a pdb list
 def get_all_atom_types(atom_list):
     types = []
     for atom in atom_list:
@@ -29,3 +29,16 @@ def get_all_atom_types(atom_list):
     types = list(set(types))
 
     return types
+
+
+# returns a list of residue numbers of a pdb list
+def get_all_residue_numbers(atom_list):
+    residue_numbers = []
+    for atom in atom_list:
+        residue_numbers.append(atom[3])
+
+    residue_numbers = list(set(residue_numbers))
+    residue_numbers = [int(number) for number in residue_numbers]
+    residue_numbers = sorted(residue_numbers)
+
+    return residue_numbers
