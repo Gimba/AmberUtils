@@ -18,14 +18,14 @@ def read_cpptraj_contacts_data(file_name):
 
 
 # executes the cpptraj with the given parameters, outputs of will be written as files specified in the cpptraj file
-def run_cpptraj(pdb, trajin, cpptraj_file):
-    os.system('cpptraj -p ' + pdb + ' -y ' + trajin + ' -i ' + cpptraj_file)
+def run_cpptraj(prmtop, trajin, cpptraj_file):
+    os.system('cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file)
 
 
 # creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
 # e.g. nativecontacts :47@C :1-5000 writecontacts F2196A_contacts.dat distance 3.9). The name fo the file is the
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
-# F2196A_contacts.cpptraj).
+# F2196A_contacts.cpptraj). Water and hydrogen stripped.
 def create_contact_cpptraj(trajin, res1, res2):
 
     cpptraj_file = trajin.split('.')[0] + "_contacts.cpptraj"
@@ -40,3 +40,22 @@ def create_contact_cpptraj(trajin, res1, res2):
         f.write('go')
 
     return [cpptraj_file, out_file]
+
+
+# creates a cpptraj file to generate a pdb from the given inputs
+def create_pdb_cpptraj(prmtop, trajin):
+    prmtop = prmtop.split('.')[0]
+    trajin = trajin.split('.')[0]
+    cpptraj_file = prmtop + "_pdb.cpptraj"
+    pdb = prmtop + "_" + trajin + ".pdb"
+
+    with open(cpptraj_file, 'w') as f:
+        f.write('strip :WAT\nstrip @H*\nstrip @?H*\n')
+        f.write('trajout ' + pdb)
+    return cpptraj_file
+
+
+# generates pdb file in the working directory from parameters. Water and hydrogen stripped
+def get_pdb(prmtop, trajin):
+    cpptraj_file = create_pdb_cpptraj(prmtop, trajin)
+    run_cpptraj(prmtop, trajin, cpptraj_file)
