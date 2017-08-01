@@ -23,6 +23,8 @@ import sys
 from collections import Counter
 
 import CalcResNum1iqd
+import CpptrajHelper as cpp
+import PdbHelper as pdb
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
@@ -60,6 +62,23 @@ def main(argv):
     os.system("cp " + trajin_mutated_init + " " + results_folder)
     os.system("cp " + trajin_mutated_sim + " " + results_folder)
     os.chdir(os.getcwd() + '/' + results_folder)
+
+    pdb_file = cpp.generate_pdb(pdb_unmutated, trajin_unmutated)
+    atom_list = pdb.read_pdb_atoms(pdb_file)
+    types = pdb.get_all_atom_types(atom_list)
+    residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
+    model_contacts = cpp.create_contact_cpptraj(trajin_unmutated, residue_atom_list, ['1-5000'])
+    # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
+    occ_average1 = get_occupancy_averages_of_types(model_contacts[1], types)
+
+    pdb_file = cpp.generate_pdb(pdb_mutated, trajin_mutated_init)
+    atom_list = pdb.read_pdb_atoms(pdb_file)
+    types = pdb.get_all_atom_types(atom_list)
+    residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
+    model_contacts = cpp.create_contact_cpptraj(trajin_mutated_init, residue_atom_list, ['1-5000'])
+    # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
+    occ_average2 = get_occupancy_averages_of_types(model_contacts[1], types)
+    exit()
 
     # get residues contacting the mutation residue
     model_contacts = create_contact_cpptraj(trajin_unmutated, [mutation], ['1-5000'])
@@ -112,6 +131,23 @@ def main(argv):
     occupancy_atoms_muta_sim = convert_res_numbers(occupancy_atoms_muta_sim)
 
     output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim, interesting)
+
+
+# calculates the average of contacts of types in the given data
+def get_occupancy_averages_of_types(data_file, types):
+    data = cpp.read_cpptraj_contacts_data(data_file)
+
+    type_occupancy_average = []
+    for item in types:
+        residue_types = []
+        for line in data:
+            if item in line[0][0]:
+                residue_types.append(line[0][0])
+
+        type_occupancies = Counter(residue_types).values()
+        average = sum(type_occupancies) / float(len(type_occupancies))
+        type_occupancy_average.append([item, average])
+    return type_occupancy_average
 
 
 def output_quantify(init_muta, init_sim, totals):
