@@ -57,6 +57,17 @@ def create_pdb_cpptraj(prmtop, trajin):
     return [cpptraj_file, pdb]
 
 
+# returns a list of all atoms concatenated with an atom type (e.g. [23@CA, 23@C,...])
+def create_all_atom_residue_list(atom_list, atom_types):
+    out = []
+    for atom in atom_list:
+        for atom_type in atom_types:
+            if atom_type == atom[1]:
+                out.append(atom[3] + '@' + atom_type)
+
+    return out
+
+
 # generates pdb file in the working directory from parameters. Returns the name of the pdb file. Water and hydrogen
 # stripped
 def generate_pdb(prmtop, trajin):
