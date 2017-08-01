@@ -18,3 +18,14 @@ def read_pdb_atoms(pdb_file):
                 z = line[7]
                 out.append(a_number, a_type, res_type, res_number, x, y, z)
     return out
+
+
+# returns a list of atom types of a pdb
+def get_all_atom_types(atom_list):
+    types = []
+    for atom in atom_list:
+        types.append(atom[1])
+
+    types = list(set(types))
+
+    return types
