@@ -1,3 +1,5 @@
+import os
+
 def read_cpptraj_contacts_data(file_name):
 
     out = []
@@ -10,3 +12,7 @@ def read_cpptraj_contacts_data(file_name):
                 dist = float(line[4])
                 out.append(atom, dist)
     return out
+
+
+def run_cpptraj(pdb, trajin, cpptraj_file):
+    os.system('cpptraj -p ' + pdb + ' -y ' + trajin + ' -i ' + cpptraj_file)
