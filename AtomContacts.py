@@ -100,6 +100,8 @@ def main(argv):
     init_muta_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy[1])
     init_sim_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy_sim[1])
 
+    print output_quantify(init_muta_contacts, init_sim_contacts, [total_dist_init, total_dist_muta, total_dist_sim])
+    exit()
     # find atoms that are not present in all three data sets. The resulting list of interesting atoms contains only
     # those ones that changed their occupancy as an effect of mutation or simulation
     interesting = get_interesting_atoms(occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim)
@@ -111,6 +113,35 @@ def main(argv):
 
     output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim, interesting)
 
+
+def output_quantify(init_muta, init_sim, totals):
+    output = ""
+    counter = -1
+    header = ["lost far", "gained far","lost middle", "gained middle", "lost close", "gained close"]
+    for item in init_sim:
+        counter += 1
+        head_line = header[counter] + " values: init -> muta \n"
+        output += head_line
+        for contact in item:
+            output += contact[0] + " " + str(contact[1]) + "\n"
+        output += header[counter] + " contacts: " + str(len(item)) + "\n\n"
+
+    total = 0
+    totalo = []
+
+    # for item1 in totals[0]:
+    #     for item2 in totals[1]:
+    #         if item1[0] == item2[0]:
+    #             print str(item1[1] - item2[1])
+
+    # for list in totals:
+    #     for item in list:
+    #         total += item[1]
+    #     totalo.append(total)
+    #     total = 0
+    # print totalo
+    # exit()
+    return output
 
 # returns amount of distance change
 def quantify_distances(contacts_data):
@@ -141,21 +172,21 @@ def quantify_distances_of_contacts(data1, data2):
     data1_categorized = categorize_contacts(data1)
     data2_categorized = categorize_contacts(data2)
 
-    data1_top_keys = [item[0] for item in data1_categorized[0]]
-    # # data1_top_values = [item[1] for item in data1_categorized[0]]
+    data1_far_keys = [item[0] for item in data1_categorized[0]]
+    # # data1_far_values = [item[1] for item in data1_categorized[0]]
     #
-    data2_top_keys = [item[0] for item in data2_categorized[0]]
+    data2_far_keys = [item[0] for item in data2_categorized[0]]
 
-    lost_top = non_mutual(data1_categorized[0], data2_categorized[0])
-    gain_top = non_mutual(data2_categorized[0], data1_categorized[0])
+    lost_far = non_mutual(data1_categorized[0], data2_categorized[0])
+    gain_far = non_mutual(data2_categorized[0], data1_categorized[0])
 
     lost_middle = non_mutual(data1_categorized[1], data2_categorized[1])
     gain_middle = non_mutual(data2_categorized[1], data1_categorized[1])
 
-    lost_bottom = non_mutual(data1_categorized[2], data2_categorized[2])
-    gain_bottom = non_mutual(data2_categorized[2], data1_categorized[2])
+    lost_close = non_mutual(data1_categorized[2], data2_categorized[2])
+    gain_close = non_mutual(data2_categorized[2], data1_categorized[2])
 
-    return [lost_top, gain_top, lost_middle, gain_middle, lost_bottom, gain_bottom]
+    return [lost_far, gain_far, lost_middle, gain_middle, lost_close, gain_close]
 
 
 # expecting lists with keys in first and values in second column
@@ -175,9 +206,9 @@ def non_mutual(list1, list2):
 
 
 def categorize_contacts(contacts_data):
-    top = []
+    far = []
     middle = []
-    bottom = []
+    close = []
 
     with open(contacts_data, 'r') as f:
         for line in f:
@@ -188,13 +219,13 @@ def categorize_contacts(contacts_data):
 
                 # categorize contacts due to distance
                 if dist > 3.8:
-                    top.append([atom, dist])
-                elif dist > 2.5:
+                    far.append([atom, dist])
+                elif dist > 3.0:
                     middle.append([atom, dist])
                 else:
-                    bottom.append([atom, dist])
+                    close.append([atom, dist])
 
-    return [top, middle, bottom]
+    return [far, middle, close]
 
 
 # returns spatially sorted distance list
