@@ -1,5 +1,8 @@
 import os
 
+
+# reads in the specfied file and returns a list that contains elements consiting of the two contacting atoms and
+# their distance to each other (e.g. [[[246@N, 23@C],2.34], [246@H, 23@CB], 3.12],...]
 def read_cpptraj_contacts_data(file_name):
 
     out = []
@@ -14,10 +17,15 @@ def read_cpptraj_contacts_data(file_name):
     return out
 
 
+# executes the cpptraj with the given parameters, outputs of will be written as files specified in the cpptraj file
 def run_cpptraj(pdb, trajin, cpptraj_file):
     os.system('cpptraj -p ' + pdb + ' -y ' + trajin + ' -i ' + cpptraj_file)
 
 
+# creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
+# e.g. nativecontacts :47@C :1-5000 writecontacts F2196A_contacts.dat distance 3.9). The name fo the file is the
+# given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
+# F2196A_contacts.cpptraj).
 def create_contact_cpptraj(trajin, res1, res2):
 
     cpptraj_file = trajin.split('.')[0] + "_contacts.cpptraj"
