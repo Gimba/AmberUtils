@@ -16,7 +16,7 @@ def read_pdb_atoms(pdb_file):
                 x = line[5]
                 y = line[6]
                 z = line[7]
-                out.append(a_number, a_type, res_type, res_number, x, y, z)
+                out.append([a_number, a_type, res_type, res_number, x, y, z])
     return out
 
 
