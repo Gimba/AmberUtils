@@ -13,7 +13,7 @@ def read_cpptraj_contacts_data(file_name):
                 atom = line[1].replace(':', '')
                 atom = atom[1].split('_')
                 dist = float(line[4])
-                out.append(atom, dist)
+                out.append([atom, dist])
     return out
 
 
