@@ -1,7 +1,5 @@
 import os
 
-import PdbHelper as pdb
-
 
 # reads in the specfied file and returns a list that contains elements consiting of the two contacting atoms and
 # their distance to each other (e.g. [[[246@N, 23@C],2.34], [246@H, 23@CB], 3.12],...]
@@ -57,11 +55,10 @@ def create_pdb_cpptraj(prmtop, trajin):
     return [cpptraj_file, pdb]
 
 
-# generates pdb file in the working directory from parameters. Returns the ATOM records of the generated pdb as a list.
-# Water and hydrogen stripped
-def get_pdb(prmtop, trajin):
+# generates pdb file in the working directory from parameters. Returns the name of the pdb file. Water and hydrogen
+# stripped
+def generate_pdb(prmtop, trajin):
     cpptraj = create_pdb_cpptraj(prmtop, trajin)
     run_cpptraj(prmtop, trajin, cpptraj[0])
-    pdb_atom_list = pdb.read_pdb_atoms(cpptraj[1])
-
-    return pdb_atom_list
+    pdb_name = cpptraj[1]
+    return pdb_name
