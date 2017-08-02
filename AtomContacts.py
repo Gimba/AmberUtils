@@ -97,11 +97,9 @@ def main(argv):
     # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
     occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms)
 
-    print output_2D_list(occ_init)
-    print output_2D_list(occ_muta)
-    print output_2D_list(occ_sim)
-
-    # print output_occupancy_averages(avrg_init, init, types)
+    temp = c_bind(occ_init, occ_muta)
+    temp = c_bind(temp, occ_init)
+    print temp
 
     # get total distances of mutation contacting atoms
     # total_dist_init = quantify_distances(model_atom_occupancy[1])
@@ -159,16 +157,18 @@ def output_2D_list(list2d):
     return output
 
 
-def output_occupancy_averages(avrgs, occs, types):
-    output = ""
+def c_bind(list1, list2):
+    outlist = []
+    if len(list1) == len(list2):
+        for i in range(0, len(list1)):
+            temp1 = list(list1[i])
+            temp2 = list(list2[i])
+            temp1.extend(temp2)
+            outlist.append(temp1)
+    else:
+        print "fail: lists have different lengths"
 
-    for t in types:
-        output += t + ", "
-        for avg in avrgs:
-            if t == avg[0]:
-                output += str(avg[1]) + ", "
-        output += "\n"
-    return output
+    return outlist
 
 
 # calculates the average of contacts of types in the given data
