@@ -32,7 +32,7 @@ def create_contact_cpptraj(trajin, res1, res2):
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
     with open(cpptraj_file, 'w') as f:
-        # f.write('strip :WAT\n')
+        f.write('strip :WAT\n')
         f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
         for item1 in res1:
             for item2 in res2:
@@ -52,7 +52,7 @@ def create_pdb_cpptraj(prmtop, trajin):
     pdb = prmtop + "_" + trajin + ".pdb"
 
     with open(cpptraj_file, 'w') as f:
-        # f.write('strip :WAT\n')
+        f.write('strip :WAT\n')
         f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
         f.write('trajout ' + pdb)
         f.write('\ngo')
