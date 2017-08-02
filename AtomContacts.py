@@ -103,8 +103,12 @@ def main(argv):
     occ_list = add_averages_column(occ_list, avrg_muta)
     occ_list = add_averages_column(occ_list, avrg_sim)
 
+    occ_list = [(x[0], x) for x in occ_list]
+    occ_list.sort()
+    occ_list = [x[1] for x in occ_list]
+
     top_header = ["", "Occupancies", "", "", "Averages", "", "", ""]
-    header = ["Atom", " Init", " Mutation", " Simulation", " Init", " Mutation", " Simulation"]
+    header = ["Atom", "Init", "Mutation", "Simulation", "Init", "Mutation", "Simulation"]
     occ_list = [header] + occ_list
     occ_list = [top_header] + occ_list
 
