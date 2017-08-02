@@ -63,32 +63,29 @@ def main(argv):
     os.system("cp " + trajin_sim + " " + results_folder)
     os.chdir(os.getcwd() + '/' + results_folder)
 
+    ##### get occupancy averages of types #####
+
     # get a list of all atoms of all residues
-    pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init)
-    atom_list_unmutated = pdb.read_pdb_atoms(pdb_file_unmutated)
+    # pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init)
+    # atom_list_unmutated = pdb.read_pdb_atoms(pdb_file_unmutated)
 
     # get a list of types present in a atom list
-    types = pdb.get_all_atom_types(atom_list_unmutated)
+    # types = pdb.get_all_atom_types(atom_list_unmutated)
 
-    avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types)
+    # avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types)
+    #
+    # avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types)
+    #
+    # avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types)
+    #
+    # print output_2D_list(avrg_init)
+    # print output_2D_list(avrg_muta)
+    # print output_2D_list(avrg_sim)
 
-    avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types)
+    ##### get occupancy of atoms in contact with the mutation #####
 
-    avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types)
-
-    print output_2D_list(avrg_init)
-    print output_2D_list(avrg_muta)
-    print output_2D_list(avrg_sim)
-
-
-    # get mutation contacting atoms
-    # model_contacts = cpp.create_contact_cpptraj(trajin_init, [mutation], ['1-5000'])
-    # cpp.run_cpptraj(prmtop_init, trajin_init, model_contacts[0])
-    # contact_atoms_init = get_atom_contacts(model_contacts[1], mutation)
-    # residues = extract_residues(contact_atoms_init)
-
-    # get atoms in contact with mutation residue
-    # atoms = extract_atoms(contact_atoms_init)
+    # get mutation contacts
+    atoms = get_contacting_atoms(prmtop_init, trajin_init, mutation)
 
     # get occupancy of atoms contacting mutation residue
     # model_atom_occupancy = cpp.create_contact_cpptraj(trajin_init, atoms, ['1-5000'])
@@ -131,6 +128,15 @@ def main(argv):
     # contacts_sim = convert_res_numbers(contacts_sim)
 
     # output_results([trajin_init, trajin_muta, trajin_sim], contacts_init, contacts_muta, contacts_sim, interesting)
+
+
+# get atoms in contact with specified residue
+def get_contacting_atoms(prmtop, trajin, residue):
+    model_contacts = cpp.create_contact_cpptraj(trajin, [residue], ['1-5000'])
+    cpp.run_cpptraj(prmtop, trajin, model_contacts[0])
+    contact_atoms_init = get_atom_contacts(model_contacts[1], residue)
+    atoms = extract_atoms(contact_atoms_init)
+    return atoms
 
 
 # returns the averages for all types of atoms in a given prmtop file and trajectory
