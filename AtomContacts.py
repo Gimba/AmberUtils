@@ -99,6 +99,8 @@ def main(argv):
 
     temp = c_bind(occ_init, occ_muta)
     temp = c_bind(temp, occ_init)
+    temp = c_del(temp, 2)
+    temp = c_del(temp, 3)
     print temp
 
     # get total distances of mutation contacting atoms
@@ -167,6 +169,17 @@ def c_bind(list1, list2):
             outlist.append(temp1)
     else:
         print "fail: lists have different lengths"
+
+    return outlist
+
+
+def c_del(lst, column):
+    outlist = []
+
+    for item in lst:
+        outitem = item[:column]
+        outitem.extend(item[column + 1:])
+        outlist.append(outitem)
 
     return outlist
 
