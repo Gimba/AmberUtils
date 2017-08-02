@@ -42,95 +42,125 @@ def main(argv):
 
     mutation = args.mutation
 
-    pdb_unmutated = args.pdb_unmutated
-    unmutated_name = pdb_unmutated.split('.')[0]
-    trajin_unmutated = args.trajin_unmutated
+    prmtop_init = args.pdb_unmutated
+    unmutated_name = prmtop_init.split('.')[0]
+    trajin_init = args.trajin_unmutated
 
-    pdb_mutated = args.pdb_mutated
-    mutated_name = pdb_mutated.split('.')[0]
-    trajin_mutated_init = args.trajin_mutated_init
-    trajin_mutated_sim = args.trajin_mutated_simulation
+    prmtop_muta = args.pdb_mutated
+    mutated_name = prmtop_muta.split('.')[0]
+    trajin_muta = args.trajin_mutated_init
+    trajin_sim = args.trajin_mutated_simulation
 
     results_folder = 'contacts_' + unmutated_name + '_' + mutated_name + '/'
 
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    os.system("cp " + pdb_unmutated + " " + results_folder)
-    os.system("cp " + pdb_mutated + " " + results_folder)
-    os.system("cp " + trajin_unmutated + " " + results_folder)
-    os.system("cp " + trajin_mutated_init + " " + results_folder)
-    os.system("cp " + trajin_mutated_sim + " " + results_folder)
+    os.system("cp " + prmtop_init + " " + results_folder)
+    os.system("cp " + prmtop_muta + " " + results_folder)
+    os.system("cp " + trajin_init + " " + results_folder)
+    os.system("cp " + trajin_muta + " " + results_folder)
+    os.system("cp " + trajin_sim + " " + results_folder)
     os.chdir(os.getcwd() + '/' + results_folder)
 
-    pdb_file = cpp.generate_pdb(pdb_unmutated, trajin_unmutated)
-    atom_list = pdb.read_pdb_atoms(pdb_file)
-    types = pdb.get_all_atom_types(atom_list)
-    residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
-    model_contacts = cpp.create_contact_cpptraj(trajin_unmutated, residue_atom_list, ['1-5000'])
-    # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
-    occ_average1 = get_occupancy_averages_of_types(model_contacts[1], types)
+    # get a list of all atoms of all residues
+    pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init)
+    atom_list_unmutated = pdb.read_pdb_atoms(pdb_file_unmutated)
 
-    pdb_file = cpp.generate_pdb(pdb_mutated, trajin_mutated_init)
-    atom_list = pdb.read_pdb_atoms(pdb_file)
-    types = pdb.get_all_atom_types(atom_list)
-    residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
-    model_contacts = cpp.create_contact_cpptraj(trajin_mutated_init, residue_atom_list, ['1-5000'])
-    # run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
-    occ_average2 = get_occupancy_averages_of_types(model_contacts[1], types)
-    exit()
+    # get a list of types present in a atom list
+    types = pdb.get_all_atom_types(atom_list_unmutated)
 
-    # get residues contacting the mutation residue
-    model_contacts = create_contact_cpptraj(trajin_unmutated, [mutation], ['1-5000'])
-    run_cpptraj(pdb_unmutated, trajin_unmutated, model_contacts[0])
-    contact_atoms_init = get_atom_contacts(model_contacts[1], mutation)
+    avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types)
+
+    avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types)
+
+    avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types)
+
+    print output_2D_list(avrg_init)
+    print output_2D_list(avrg_muta)
+    print output_2D_list(avrg_sim)
+
+
+    # get mutation contacting atoms
+    # model_contacts = cpp.create_contact_cpptraj(trajin_init, [mutation], ['1-5000'])
+    # cpp.run_cpptraj(prmtop_init, trajin_init, model_contacts[0])
+    # contact_atoms_init = get_atom_contacts(model_contacts[1], mutation)
     # residues = extract_residues(contact_atoms_init)
 
-    # get atoms of contacting residues in contact with mutation residue
-    atoms = extract_atoms(contact_atoms_init)
-
+    # get atoms in contact with mutation residue
+    # atoms = extract_atoms(contact_atoms_init)
 
     # get occupancy of atoms contacting mutation residue
-    model_atom_occupancy = create_contact_cpptraj(trajin_unmutated, atoms, ['1-5000'])
-    run_cpptraj(pdb_unmutated, trajin_unmutated, model_atom_occupancy[0])
-    occupancy_atoms_init = get_atom_contacts(model_contacts[1], '')
-    init = get_atom_occupancy(occupancy_atoms_init)
-
+    # model_atom_occupancy = cpp.create_contact_cpptraj(trajin_init, atoms, ['1-5000'])
+    # cpp.run_cpptraj(pdb_unmutated, trajin_unmutated, model_atom_occupancy[0])
+    # contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
+    # init = get_atom_occupancy(contacts_init)
 
     # get occupancy of atoms contating mutation residue after mutation
-    muta_atom_occupancy = create_contact_cpptraj(trajin_mutated_init, atoms, ['1-5000'])
-    run_cpptraj(pdb_mutated, trajin_mutated_init, muta_atom_occupancy[0])
-    occupancy_atoms_muta_init = get_atom_contacts(muta_atom_occupancy[1], '')
-    muta = get_atom_occupancy(occupancy_atoms_muta_init)
+    # muta_atom_occupancy = cpp.create_contact_cpptraj(trajin_muta, atoms, ['1-5000'])
+    # cpp.run_cpptraj(pdb_mutated, trajin_mutated_init, muta_atom_occupancy[0])
+    # contacts_muta = get_atom_contacts(muta_atom_occupancy[1], '')
+    # muta = get_atom_occupancy(contacts_muta)
 
 
     # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
-    muta_atom_occupancy_sim = create_contact_cpptraj(trajin_mutated_sim, atoms, ['1-5000'])
-    run_cpptraj(pdb_mutated, trajin_mutated_sim, muta_atom_occupancy_sim[0])
-    occupancy_atoms_muta_sim = get_atom_contacts(muta_atom_occupancy_sim[1], '')
-    sim = get_atom_occupancy(occupancy_atoms_muta_sim)
+    # muta_atom_occupancy_sim = cpp.create_contact_cpptraj(trajin_sim, atoms, ['1-5000'])
+    # cpp.run_cpptraj(pdb_mutated, trajin_mutated_sim, muta_atom_occupancy_sim[0])
+    # contacts_sim = get_atom_contacts(muta_atom_occupancy_sim[1], '')
+    # sim = get_atom_occupancy(contacts_sim)
+
+    # print output_occupancy_averages(avrg_init, init, types)
 
     # get total distances of mutation contacting atoms
-    total_dist_init = quantify_distances(model_atom_occupancy[1])
-    total_dist_muta = quantify_distances(muta_atom_occupancy[1])
-    total_dist_sim = quantify_distances(muta_atom_occupancy_sim[1])
+    # total_dist_init = quantify_distances(model_atom_occupancy[1])
+    # total_dist_muta = quantify_distances(muta_atom_occupancy[1])
+    # total_dist_sim = quantify_distances(muta_atom_occupancy_sim[1])
 
     # categorize distances of contacts
-    init_muta_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy[1])
-    init_sim_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy_sim[1])
+    # init_muta_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy[1])
+    # init_sim_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy_sim[1])
 
-    print output_quantify(init_muta_contacts, init_sim_contacts, [total_dist_init, total_dist_muta, total_dist_sim])
-    exit()
+    # print output_quantify(init_muta_contacts, init_sim_contacts, [total_dist_init, total_dist_muta, total_dist_sim])
     # find atoms that are not present in all three data sets. The resulting list of interesting atoms contains only
     # those ones that changed their occupancy as an effect of mutation or simulation
-    interesting = get_interesting_atoms(occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim)
+    # interesting = get_interesting_atoms(contacts_init, contacts_muta, contacts_sim)
 
-    interesting = convert_res_numbers(interesting)
-    occupancy_atoms_init = convert_res_numbers(occupancy_atoms_init)
-    occupancy_atoms_muta_init = convert_res_numbers(occupancy_atoms_muta_init)
-    occupancy_atoms_muta_sim = convert_res_numbers(occupancy_atoms_muta_sim)
+    # interesting = convert_res_numbers(interesting)
+    # contacts_init = convert_res_numbers(contacts_init)
+    # contacts_muta = convert_res_numbers(contacts_muta)
+    # contacts_sim = convert_res_numbers(contacts_sim)
 
-    output_results([trajin_unmutated, trajin_mutated_init, trajin_mutated_sim], occupancy_atoms_init, occupancy_atoms_muta_init, occupancy_atoms_muta_sim, interesting)
+    # output_results([trajin_init, trajin_muta, trajin_sim], contacts_init, contacts_muta, contacts_sim, interesting)
+
+
+# returns the averages for all types of atoms in a given prmtop file and trajectory
+def get_contact_averages_of_types(prmtop, trajin, types):
+    pdb_file_mutated = cpp.generate_pdb(prmtop, trajin)
+    atom_list_mutated = pdb.read_pdb_atoms(pdb_file_mutated)
+    residue_atom_list_mutated = cpp.create_all_atom_residue_list(atom_list_mutated, types)
+    model_contacts_mutated = cpp.create_contact_cpptraj(trajin, residue_atom_list_mutated, ['1-5000'])
+    cpp.run_cpptraj(prmtop, trajin, model_contacts_mutated[0])
+    avrgs = get_occupancy_averages_of_types(model_contacts_mutated[1], types)
+    return avrgs
+
+
+def output_2D_list(list2d):
+    output = ""
+    for item in list2d:
+        output += str(item[0]) + "," + str(item[1]) + "\n"
+    return output
+
+
+def output_occupancy_averages(avrgs, occs, types):
+    output = ""
+
+    for t in types:
+        output += t + ", "
+        for avg in avrgs:
+            if t == avg[0]:
+                output += str(avg[1]) + ", "
+        output += "\n"
+    return output
 
 
 # calculates the average of contacts of types in the given data
@@ -141,12 +171,14 @@ def get_occupancy_averages_of_types(data_file, types):
     for item in types:
         residue_types = []
         for line in data:
-            if item in line[0][0]:
+            temp = line[0][0].split('@')[1]
+            if item == temp:
                 residue_types.append(line[0][0])
+        if len(residue_types) != 0:
+            type_occupancies = Counter(residue_types).values()
+            average = sum(type_occupancies) / float(len(type_occupancies))
+            type_occupancy_average.append([item, average])
 
-        type_occupancies = Counter(residue_types).values()
-        average = sum(type_occupancies) / float(len(type_occupancies))
-        type_occupancy_average.append([item, average])
     return type_occupancy_average
 
 
@@ -316,7 +348,8 @@ def extract_atoms(contact_atoms):
         item = item.split('_')[1]
         # :22@O -> 22@O
         item = item.replace(':', '')
-        out.append(item)
+        if item.split('@')[0] != '23':
+            out.append(item)
 
     # consolidate same residues
     out = list(set(out))

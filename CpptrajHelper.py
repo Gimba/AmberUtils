@@ -28,8 +28,7 @@ def run_cpptraj(prmtop, trajin, cpptraj_file):
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
 # F2196A_contacts.cpptraj). Water, Chlor and hydrogen stripped
 def create_contact_cpptraj(trajin, res1, res2):
-
-    cpptraj_file = trajin.split('.')[0] + "_contacts.cpptraj"
+    cpptraj_file = trajin.split('.')[0] + "_" + trajin.split('.')[1] + "_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
     with open(cpptraj_file, 'w') as f:
@@ -58,7 +57,7 @@ def create_pdb_cpptraj(prmtop, trajin):
     return [cpptraj_file, pdb]
 
 
-# returns a list of all atoms concatenated with an atom type (e.g. [23@CA, 23@C,...])
+# returns a list of all atoms with an atom type (e.g. [23@CA, 23@C,...])
 def create_all_atom_residue_list(atom_list, atom_types):
     out = []
     for atom in atom_list:
