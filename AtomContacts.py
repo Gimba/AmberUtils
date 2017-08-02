@@ -88,10 +88,7 @@ def main(argv):
     atoms = get_contacting_atoms(prmtop_init, trajin_init, mutation)
 
     # get occupancy of atoms contacting mutation residue
-    # model_atom_occupancy = cpp.create_contact_cpptraj(trajin_init, atoms, ['1-5000'])
-    # cpp.run_cpptraj(pdb_unmutated, trajin_unmutated, model_atom_occupancy[0])
-    # contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
-    # init = get_atom_occupancy(contacts_init)
+    occ_init = get_occupancy_of_atoms(prmtop_init, trajin_init, mutation)
 
     # get occupancy of atoms contating mutation residue after mutation
     # muta_atom_occupancy = cpp.create_contact_cpptraj(trajin_muta, atoms, ['1-5000'])
@@ -129,6 +126,13 @@ def main(argv):
 
     # output_results([trajin_init, trajin_muta, trajin_sim], contacts_init, contacts_muta, contacts_sim, interesting)
 
+
+def get_occupancy_of_atoms(prmtop, trajin, atoms):
+    model_atom_occupancy = cpp.create_contact_cpptraj(trajin, atoms, ['1-5000'])
+    cpp.run_cpptraj(prmtop, trajin, model_atom_occupancy[0])
+    contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
+    occupancy = get_atom_occupancy(contacts_init)
+    return occupancy
 
 # get atoms in contact with specified residue
 def get_contacting_atoms(prmtop, trajin, residue):
