@@ -24,6 +24,7 @@ from collections import Counter
 
 import CalcResNum1iqd
 import CpptrajHelper as cpp
+import ListHelper as lst
 import PdbHelper as pdb
 
 __author__ = 'Martin Rosellen'
@@ -95,14 +96,14 @@ def main(argv):
 
     ##### reformat data #####
 
-    occ_list = c_bind(occ_init, occ_muta)
-    occ_list = c_bind(occ_list, occ_sim)
-    occ_list = c_del(occ_list, 2)
-    occ_list = c_del(occ_list, 3)
+    occ_list = lst.c_bind(occ_init, occ_muta)
+    occ_list = lst.c_bind(occ_list, occ_sim)
+    occ_list = lst.c_del(occ_list, 2)
+    occ_list = lst.c_del(occ_list, 3)
 
-    res_numb = convert_res_numbers(c_get(occ_list, 0))
-    occ_list = c_del(occ_list, 0)
-    occ_list = c_bind(res_numb, occ_list)
+    res_numb = convert_res_numbers(lst.c_get(occ_list, 0))
+    occ_list = lst.c_del(occ_list, 0)
+    occ_list = lst.c_bind(res_numb, occ_list)
 
     occ_list = add_averages_column(occ_list, avrg_init)
     occ_list = add_averages_column(occ_list, avrg_muta)
@@ -117,9 +118,8 @@ def main(argv):
     occ_list = [header] + occ_list
     occ_list = [top_header] + occ_list
 
-    output = output_2D_list(occ_list)
-    write_output(output, prmtop_muta.split('.')[0] + '.dat')
-
+    output = lst.output_2D_list(occ_list)
+    write_output(output, prmtop_muta.split('.')[0] + '_occupancies.dat')
 
 
 def add_averages_column(lst, avrgs):
@@ -161,58 +161,7 @@ def get_contact_averages_of_types(prmtop, trajin, types):
     return avrgs
 
 
-def output_2D_list(list2d):
-    output = ""
-    for item in list2d:
-        for cell in item:
-            output += str(cell) + ","
-        output += "\n"
-    return output
 
-
-def c_get(lst, column):
-    outlist = []
-    for item in lst:
-        outlist.append(item[column])
-    return outlist
-
-# add a column to the right
-def c_bind(list1, list2):
-    outlist = []
-    if len(list1) == len(list2):
-        for i in range(0, len(list1)):
-            if isinstance(list1[i], str):
-                temp1 = [list1[i]]
-            elif isinstance(list1[i], tuple):
-                temp1 = list(list1[i])
-            else:
-                temp1 = list1[i]
-
-            if isinstance(list2[i], str):
-                temp2 = [list2[i]]
-            elif isinstance(list2[i], tuple):
-                temp2 = list(list2[i])
-            else:
-                temp2 = list2[i]
-            temp1.extend(temp2)
-
-            outlist.append(temp1)
-    else:
-        print "fail: lists have different lengths"
-
-    return outlist
-
-
-# delete a column
-def c_del(lst, column):
-    outlist = []
-
-    for item in lst:
-        outitem = item[:column]
-        outitem.extend(item[column + 1:])
-        outlist.append(outitem)
-
-    return outlist
 
 
 # calculates the average of contacts of types in the given data
@@ -232,7 +181,6 @@ def get_occupancy_averages_of_types(data_file, types):
             type_occupancy_average.append([item, average])
 
     return type_occupancy_average
-
 
 def output_quantify(init_muta, init_sim, totals):
     output = ""
