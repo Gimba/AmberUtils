@@ -113,26 +113,6 @@ def main(argv):
     occ_list = [top_header] + occ_list
 
     print output_2D_list(occ_list)
-    # get total distances of mutation contacting atoms
-    # total_dist_init = quantify_distances(model_atom_occupancy[1])
-    # total_dist_muta = quantify_distances(muta_atom_occupancy[1])
-    # total_dist_sim = quantify_distances(muta_atom_occupancy_sim[1])
-
-    # categorize distances of contacts
-    # init_muta_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy[1])
-    # init_sim_contacts = quantify_distances_of_contacts(model_atom_occupancy[1], muta_atom_occupancy_sim[1])
-
-    # print output_quantify(init_muta_contacts, init_sim_contacts, [total_dist_init, total_dist_muta, total_dist_sim])
-    # find atoms that are not present in all three data sets. The resulting list of interesting atoms contains only
-    # those ones that changed their occupancy as an effect of mutation or simulation
-    # interesting = get_interesting_atoms(contacts_init, contacts_muta, contacts_sim)
-
-    # interesting = convert_res_numbers(interesting)
-    # contacts_init = convert_res_numbers(contacts_init)
-    # contacts_muta = convert_res_numbers(contacts_muta)
-    # contacts_sim = convert_res_numbers(contacts_sim)
-
-    # output_results([trajin_init, trajin_muta, trajin_sim], contacts_init, contacts_muta, contacts_sim, interesting)
 
 
 def add_averages_column(lst, avrgs):
@@ -152,6 +132,7 @@ def get_occupancy_of_atoms(prmtop, trajin, atoms):
     contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
     occupancy = get_atom_occupancy(contacts_init)
     return occupancy
+
 
 # get atoms in contact with specified residue
 def get_contacting_atoms(prmtop, trajin, residue):
@@ -182,6 +163,7 @@ def output_2D_list(list2d):
     return output
 
 
+# add a column to the right
 def c_bind(list1, list2):
     outlist = []
     if len(list1) == len(list2):
@@ -196,6 +178,7 @@ def c_bind(list1, list2):
     return outlist
 
 
+# delete a column
 def c_del(lst, column):
     outlist = []
 
