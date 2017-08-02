@@ -103,7 +103,12 @@ def main(argv):
     occ_list = add_averages_column(occ_list, avrg_muta)
     occ_list = add_averages_column(occ_list, avrg_sim)
 
-    print occ_list
+    top_header = ["", "Occupancies", "", "", "Averages", "", "", ""]
+    header = ["Atom", " Init", " Mutation", " Simulation", " Init", " Mutation", " Simulation"]
+    occ_list = [header] + occ_list
+    occ_list = [top_header] + occ_list
+
+    print output_2D_list(occ_list)
     # get total distances of mutation contacting atoms
     # total_dist_init = quantify_distances(model_atom_occupancy[1])
     # total_dist_muta = quantify_distances(muta_atom_occupancy[1])
@@ -167,7 +172,9 @@ def get_contact_averages_of_types(prmtop, trajin, types):
 def output_2D_list(list2d):
     output = ""
     for item in list2d:
-        output += str(item[0]) + "," + str(item[1]) + "\n"
+        for cell in item:
+            output += str(cell) + ","
+        output += "\n"
     return output
 
 
