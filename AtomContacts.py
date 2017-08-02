@@ -66,26 +66,23 @@ def main(argv):
     ##### get occupancy averages of types #####
 
     # get a list of all atoms of all residues
-    # pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init)
-    # atom_list_unmutated = pdb.read_pdb_atoms(pdb_file_unmutated)
+    pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init)
+    atom_list_unmutated = pdb.read_pdb_atoms(pdb_file_unmutated)
 
     # get a list of types present in a atom list
-    # types = pdb.get_all_atom_types(atom_list_unmutated)
+    types = pdb.get_all_atom_types(atom_list_unmutated)
 
-    # avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types)
-    #
-    # avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types)
-    #
-    # avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types)
-    #
-    # print output_2D_list(avrg_init)
-    # print output_2D_list(avrg_muta)
-    # print output_2D_list(avrg_sim)
+    avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types)
 
-    ##### get occupancy of atoms in contact with the mutation #####
+    avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types)
+
+    avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types)
+
 
     # get mutation contacts
     atoms = get_contacting_atoms(prmtop_init, trajin_init, mutation)
+
+    ##### get occupancy of atoms in contact with the mutation #####
 
     # get occupancy of atoms contacting mutation residue
     occ_init = get_occupancy_of_atoms(prmtop_init, trajin_init, atoms)
@@ -93,16 +90,20 @@ def main(argv):
     # get occupancy of atoms contating mutation residue after mutation
     occ_muta = get_occupancy_of_atoms(prmtop_muta, trajin_muta, atoms)
 
-
     # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
     occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms)
 
-    temp = c_bind(occ_init, occ_muta)
-    temp = c_bind(temp, occ_init)
-    temp = c_del(temp, 2)
-    temp = c_del(temp, 3)
-    print temp
+    ##### reformat data #####
+    occ_list = c_bind(occ_init, occ_muta)
+    occ_list = c_bind(occ_list, occ_init)
+    occ_list = c_del(occ_list, 2)
+    occ_list = c_del(occ_list, 3)
 
+    occ_list = add_averages_column(occ_list, avrg_init)
+    occ_list = add_averages_column(occ_list, avrg_muta)
+    occ_list = add_averages_column(occ_list, avrg_sim)
+
+    print occ_list
     # get total distances of mutation contacting atoms
     # total_dist_init = quantify_distances(model_atom_occupancy[1])
     # total_dist_muta = quantify_distances(muta_atom_occupancy[1])
@@ -123,6 +124,17 @@ def main(argv):
     # contacts_sim = convert_res_numbers(contacts_sim)
 
     # output_results([trajin_init, trajin_muta, trajin_sim], contacts_init, contacts_muta, contacts_sim, interesting)
+
+
+def add_averages_column(lst, avrgs):
+    outlist = []
+    for item in lst:
+        for avrg in avrgs:
+            if item[0].split('@')[1] == avrg[0]:
+                item.append(avrg[1])
+                outlist.append(item)
+
+    return outlist
 
 
 def get_occupancy_of_atoms(prmtop, trajin, atoms):
