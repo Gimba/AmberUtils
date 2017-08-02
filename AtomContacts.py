@@ -94,10 +94,15 @@ def main(argv):
     occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms)
 
     ##### reformat data #####
+
     occ_list = c_bind(occ_init, occ_muta)
-    occ_list = c_bind(occ_list, occ_init)
+    occ_list = c_bind(occ_list, occ_sim)
     occ_list = c_del(occ_list, 2)
     occ_list = c_del(occ_list, 3)
+
+    res_numb = convert_res_numbers(c_get(occ_list, 0))
+    occ_list = c_del(occ_list, 0)
+    occ_list = c_bind(res_numb, occ_list)
 
     occ_list = add_averages_column(occ_list, avrg_init)
     occ_list = add_averages_column(occ_list, avrg_muta)
@@ -163,14 +168,32 @@ def output_2D_list(list2d):
     return output
 
 
+def c_get(lst, column):
+    outlist = []
+    for item in lst:
+        outlist.append(item[column])
+    return outlist
+
 # add a column to the right
 def c_bind(list1, list2):
     outlist = []
     if len(list1) == len(list2):
         for i in range(0, len(list1)):
-            temp1 = list(list1[i])
-            temp2 = list(list2[i])
+            if isinstance(list1[i], str):
+                temp1 = [list1[i]]
+            elif isinstance(list1[i], tuple):
+                temp1 = list(list1[i])
+            else:
+                temp1 = list1[i]
+
+            if isinstance(list1[i], str):
+                temp2 = [list2[i]]
+            elif isinstance(list2[i], tuple):
+                temp2 = list(list2[i])
+            else:
+                temp2 = list2[i]
             temp1.extend(temp2)
+
             outlist.append(temp1)
     else:
         print "fail: lists have different lengths"
@@ -497,13 +520,13 @@ def convert_res_numbers(contact_atoms):
     for item in contact_atoms:
         item = item.split('_')
         temp0 = re.findall("\d+", item[0])[0]
-        temp1 = re.findall("\d+", item[1])[0]
-
         temp0_new = CalcResNum1iqd.convert(temp0)
-        temp1_new = CalcResNum1iqd.convert(temp1)
-
         item[0] = item[0].replace(temp0, temp0_new)
-        item[1] = item[1].replace(temp1, temp1_new)
+
+        if len(item) > 1:
+            temp1 = re.findall("\d+", item[1])[0]
+            temp1_new = CalcResNum1iqd.convert(temp1)
+            item[1] = item[1].replace(temp1, temp1_new)
 
         out_list.append('_'.join(item))
 
