@@ -117,7 +117,9 @@ def main(argv):
     occ_list = [header] + occ_list
     occ_list = [top_header] + occ_list
 
-    print output_2D_list(occ_list)
+    output = output_2D_list(occ_list)
+    write_output(output, prmtop_muta.split('.')[0] + '.dat')
+
 
 
 def add_averages_column(lst, avrgs):
@@ -186,7 +188,7 @@ def c_bind(list1, list2):
             else:
                 temp1 = list1[i]
 
-            if isinstance(list1[i], str):
+            if isinstance(list2[i], str):
                 temp2 = [list2[i]]
             elif isinstance(list2[i], tuple):
                 temp2 = list(list2[i])
@@ -453,7 +455,7 @@ def flip_residues(contact_list):
     return out_list
 
 
-def output_results(trajin, init, muta, prod, all_interesting):
+def write_results(trajin, init, muta, prod, all_interesting):
     model = trajin[0].split('.')[0]
     mutant = trajin[1].split('.')[0]
     production = trajin[2]
@@ -512,6 +514,11 @@ def output_results(trajin, init, muta, prod, all_interesting):
     outfile_name = model + "_" + mutant + "_results.dat"
 
     with open(outfile_name, 'w') as f:
+        f.write(output)
+
+
+def write_output(output, file_name):
+    with open(file_name, 'w') as f:
         f.write(output)
 
 
