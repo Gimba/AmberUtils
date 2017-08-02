@@ -88,20 +88,18 @@ def main(argv):
     atoms = get_contacting_atoms(prmtop_init, trajin_init, mutation)
 
     # get occupancy of atoms contacting mutation residue
-    occ_init = get_occupancy_of_atoms(prmtop_init, trajin_init, mutation)
+    occ_init = get_occupancy_of_atoms(prmtop_init, trajin_init, atoms)
 
     # get occupancy of atoms contating mutation residue after mutation
-    # muta_atom_occupancy = cpp.create_contact_cpptraj(trajin_muta, atoms, ['1-5000'])
-    # cpp.run_cpptraj(pdb_mutated, trajin_mutated_init, muta_atom_occupancy[0])
-    # contacts_muta = get_atom_contacts(muta_atom_occupancy[1], '')
-    # muta = get_atom_occupancy(contacts_muta)
+    occ_muta = get_occupancy_of_atoms(prmtop_muta, trajin_muta, atoms)
 
 
     # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
-    # muta_atom_occupancy_sim = cpp.create_contact_cpptraj(trajin_sim, atoms, ['1-5000'])
-    # cpp.run_cpptraj(pdb_mutated, trajin_mutated_sim, muta_atom_occupancy_sim[0])
-    # contacts_sim = get_atom_contacts(muta_atom_occupancy_sim[1], '')
-    # sim = get_atom_occupancy(contacts_sim)
+    occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms)
+
+    print output_2D_list(occ_init)
+    print output_2D_list(occ_muta)
+    print output_2D_list(occ_sim)
 
     # print output_occupancy_averages(avrg_init, init, types)
 
