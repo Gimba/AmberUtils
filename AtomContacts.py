@@ -39,6 +39,12 @@ def main(argv):
     parser.add_argument('trajin_mutated_init', help='trajectory for mutated structure')
     parser.add_argument('trajin_mutated_simulation', help='trajectory for mutated structure after simulation')
     parser.add_argument('mutation', help='mutated structure')
+    parser.add_argument('-a', '--avrgs', help='calculate averages', action='store_true')
+    parser.add_argument('-w', '--wat', help='strip water', action='store_true')
+    parser.add_argument('-hy', '--hydro', help='strip hydrogen', action='store_true')
+    # parser.add_argument('avrgs', nargs='?', help='if 1, averages will be calculated, default no')
+    # parser.add_argument('wat', nargs='?', help='strip water, default yes')
+    # parser.add_argument('hydro', nargs='?', help='strip hydrogen, default yes')
     args = parser.parse_args()
 
     mutation = args.mutation
@@ -52,7 +58,23 @@ def main(argv):
     trajin_muta = args.trajin_mutated_init
     trajin_sim = args.trajin_mutated_simulation
 
-    results_folder = 'contacts_' + unmutated_name + '_' + mutated_name + '/'
+    avrgs = 0
+    wat = 0
+    hydro = 0
+
+    if args.avrgs:
+        avrgs = args.avrgs
+        print avrgs
+
+    if args.wat:
+        wat = args.wat
+        print wat
+
+    if args.hydro:
+        hydro = args.hydro
+        print hydro
+
+    results_folder = 'contacts/'
 
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
@@ -67,32 +89,33 @@ def main(argv):
     ##### get occupancy averages of types #####
 
     # get a list of all atoms of all residues
-    pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init)
+    pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init, wat, hydro)
     atom_list_unmutated = pdb.read_pdb_atoms(pdb_file_unmutated)
 
     # get a list of types present in a atom list
     types = pdb.get_all_atom_types(atom_list_unmutated)
 
-    avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types)
+    if avrgs:
+        avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types, wat, hydro)
 
-    avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types)
+        avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types, wat, hydro)
 
-    avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types)
+        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types, wat, hydro)
 
 
     # get mutation contacts
-    atoms = get_contacting_atoms(prmtop_init, trajin_init, mutation)
+    atoms = get_contacting_atoms(prmtop_init, trajin_init, mutation, wat, hydro)
 
     ##### get occupancy of atoms in contact with the mutation #####
 
     # get occupancy of atoms contacting mutation residue
-    occ_init = get_occupancy_of_atoms(prmtop_init, trajin_init, atoms)
+    occ_init = get_occupancy_of_atoms(prmtop_init, trajin_init, atoms, wat, hydro)
 
     # get occupancy of atoms contating mutation residue after mutation
-    occ_muta = get_occupancy_of_atoms(prmtop_muta, trajin_muta, atoms)
+    occ_muta = get_occupancy_of_atoms(prmtop_muta, trajin_muta, atoms, wat, hydro)
 
     # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
-    occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms)
+    occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms, wat, hydro)
 
     ##### reformat data #####
 
@@ -105,16 +128,24 @@ def main(argv):
     occ_list = lst.c_del(occ_list, 0)
     occ_list = lst.c_bind(res_numb, occ_list)
 
-    occ_list = add_averages_column(occ_list, avrg_init)
-    occ_list = add_averages_column(occ_list, avrg_muta)
-    occ_list = add_averages_column(occ_list, avrg_sim)
+    if avrgs:
+        occ_list = add_averages_column(occ_list, avrg_init)
+        occ_list = add_averages_column(occ_list, avrg_muta)
+        occ_list = add_averages_column(occ_list, avrg_sim)
 
     occ_list = [(x[0], x) for x in occ_list]
     occ_list.sort()
     occ_list = [x[1] for x in occ_list]
 
-    top_header = ["", "Occupancies", "", "", "Averages", "", "", ""]
-    header = ["Atom", "Init", "Mutation", "Simulation", "Init", "Mutation", "Simulation"]
+    top_header = ["", "Occupancies", "", ""]
+    if avrgs:
+        top_header.extend(["Averages", "", "", ""])
+
+    header = ["Atom", "Init", "Mutation", "Simulation"]
+
+    if avrgs:
+        header.extend(["Init", "Mutation", "Simulation"])
+    print header
     occ_list = [header] + occ_list
     occ_list = [top_header] + occ_list
 
@@ -133,8 +164,8 @@ def add_averages_column(lst, avrgs):
     return outlist
 
 
-def get_occupancy_of_atoms(prmtop, trajin, atoms):
-    model_atom_occupancy = cpp.create_contact_cpptraj(trajin, atoms, ['1-5000'])
+def get_occupancy_of_atoms(prmtop, trajin, atoms, wat, hydro):
+    model_atom_occupancy = cpp.create_contact_cpptraj(trajin, atoms, ['1-5000'], wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_atom_occupancy[0])
     contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
     occupancy = get_atom_occupancy(contacts_init)
@@ -142,8 +173,8 @@ def get_occupancy_of_atoms(prmtop, trajin, atoms):
 
 
 # get atoms in contact with specified residue
-def get_contacting_atoms(prmtop, trajin, residue):
-    model_contacts = cpp.create_contact_cpptraj(trajin, [residue], ['1-5000'])
+def get_contacting_atoms(prmtop, trajin, residue, wat, hydro):
+    model_contacts = cpp.create_contact_cpptraj(trajin, [residue], ['1-5000'], wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_contacts[0])
     contact_atoms_init = get_atom_contacts(model_contacts[1], residue)
     atoms = extract_atoms(contact_atoms_init)
@@ -151,11 +182,11 @@ def get_contacting_atoms(prmtop, trajin, residue):
 
 
 # returns the averages for all types of atoms in a given prmtop file and trajectory
-def get_contact_averages_of_types(prmtop, trajin, types):
-    pdb_file_mutated = cpp.generate_pdb(prmtop, trajin)
+def get_contact_averages_of_types(prmtop, trajin, types, wat, hydro):
+    pdb_file_mutated = cpp.generate_pdb(prmtop, trajin, wat, hydro)
     atom_list_mutated = pdb.read_pdb_atoms(pdb_file_mutated)
     residue_atom_list_mutated = cpp.create_all_atom_residue_list(atom_list_mutated, types)
-    model_contacts_mutated = cpp.create_contact_cpptraj(trajin, residue_atom_list_mutated, ['1-5000'])
+    model_contacts_mutated = cpp.create_contact_cpptraj(trajin, residue_atom_list_mutated, ['1-5000'], wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_contacts_mutated[0])
     avrgs = get_occupancy_averages_of_types(model_contacts_mutated[1], types)
     return avrgs

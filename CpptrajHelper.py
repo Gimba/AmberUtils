@@ -20,20 +20,24 @@ def read_cpptraj_contacts_data(file_name):
 
 # executes the cpptraj with the given parameters, outputs of will be written as files specified in the cpptraj file
 def run_cpptraj(prmtop, trajin, cpptraj_file):
-    os.system('cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file)
+    os.system('cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file + ' > ' + cpptraj_file.replace('.', '_')
+              + ".log")
 
 
 # creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
 # e.g. nativecontacts :47@C :1-5000 writecontacts F2196A_contacts.dat distance 3.9). The name fo the file is the
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
 # F2196A_contacts.cpptraj). Water, Chlor and hydrogen stripped
-def create_contact_cpptraj(trajin, res1, res2):
+def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
     cpptraj_file = trajin.split('.')[0] + "_" + trajin.split('.')[1] + "_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
     with open(cpptraj_file, 'w') as f:
-        f.write('strip :WAT\n')
-        f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+        if wat:
+            f.write('strip :WAT\n')
+        if hydro:
+            f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+
         for item1 in res1:
             for item2 in res2:
                 f.write('nativecontacts :' + item1 + ' :' + item2 + ' writecontacts ' +
@@ -45,15 +49,17 @@ def create_contact_cpptraj(trajin, res1, res2):
 
 # creates a cpptraj file to generate a pdb from the given inputs. Returns name of cpptraj file and name of pdb file.
 # Water, Chlor and hydrogen stripped
-def create_pdb_cpptraj(prmtop, trajin):
+def create_pdb_cpptraj(prmtop, trajin, wat, hydro):
     prmtop = prmtop.split('.')[0]
     trajin = trajin.split('.')[0]
     cpptraj_file = prmtop + "_pdb.cpptraj"
     pdb = prmtop + "_" + trajin + ".pdb"
 
     with open(cpptraj_file, 'w') as f:
-        f.write('strip :WAT\n')
-        f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+        if wat:
+            f.write('strip :WAT\n')
+        if hydro:
+            f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
         f.write('trajout ' + pdb)
         f.write('\ngo')
     return [cpptraj_file, pdb]
@@ -72,8 +78,8 @@ def create_all_atom_residue_list(atom_list, atom_types):
 
 # generates pdb file in the working directory from parameters. Returns the name of the pdb file. Water and hydrogen
 # stripped
-def generate_pdb(prmtop, trajin):
-    cpptraj = create_pdb_cpptraj(prmtop, trajin)
+def generate_pdb(prmtop, trajin, wat, hydro):
+    cpptraj = create_pdb_cpptraj(prmtop, trajin, wat, hydro)
     run_cpptraj(prmtop, trajin, cpptraj[0])
     pdb_name = cpptraj[1]
     return pdb_name
