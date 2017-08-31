@@ -22,6 +22,7 @@ import sys
 from collections import Counter
 
 import cairo
+from PyPDF2 import PdfFileMerger
 
 import CalcResNum1iqd
 import CpptrajHelper as cpp
@@ -584,7 +585,8 @@ def prepare_output(output):
 
 def output_to_pdf(output, file_name):
     file_name = file_name.split('_')[0]
-    surface = cairo.PDFSurface(file_name + '_occupancies.pdf', 595, 842)
+    f = file_name + '0_occupancies.pdf'
+    surface = cairo.PDFSurface(f, 595, 842)
     ctx = cairo.Context(surface)
 
     # title
@@ -598,26 +600,37 @@ def output_to_pdf(output, file_name):
     ctx.set_font_size(14)
     output = output.splitlines()
     pages = 0
+    files = []
+
     for line in output:
         print line
         line = line.split(',')
         for item in line:
             ctx.move_to(x, y)
             ctx.show_text(item)
-            x += 85
+            x += 100
         y += 16
         x = 20
         if y > 820:
             pages += 1
+            files.append(f)
             surface.finish()
             surface.flush()
-            surface = cairo.PDFSurface(file_name + str(pages) + '_occupancies.pdf', 595, 842)
+            f = file_name + str(pages) + '_occupancies.pdf'
+            files.append(f)
+            surface = cairo.PDFSurface(f, 595, 842)
             ctx = cairo.Context(surface)
             ctx.set_font_size(14)
             y = 30
 
     surface.finish()
     surface.flush()
+
+    merger = PdfFileMerger()
+    for f in files:
+        merger.append(f, 'rb')
+    merger.write(file_name + '_occupancies.pdf')
+
 
 if __name__ == "__main__":
     main(sys.argv)
