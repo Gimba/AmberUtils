@@ -549,16 +549,34 @@ def prepare_output(output):
                 sim_res += int(line[3])
 
             else:
-                out += "," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "\n"
+                out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "\n"
+                # percentages
+                muta_res_per = (init_res - muta_res) * 100 / init_res
+                sim_res_per = (init_res - sim_res) * 100 / init_res
+                out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%\n\n"
+
                 last_res = res
                 init_res = int(line[1])
                 muta_res = int(line[2])
                 sim_res = int(line[3])
         out += l + "\n"
+
     out += "," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "\n"
+
+    # percentages
+    muta_res_per = (init_res - muta_res) * 100 / init_res
+    sim_res_per = (init_res - sim_res) * 100 / init_res
+    out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%\n\n"
+
+    # totals
     out += "total," + str(init_tot) + "," + str(muta_tot) + "," + str(sim_tot) + "\n"
 
-    print out
+    # total percentages
+    muta_tot_per = (init_tot - muta_tot) * 100 / init_tot
+    sim_tot_per = (init_tot - sim_tot) * 100 / init_tot
+    out += ",," + str(muta_tot_per) + "%," + str(sim_tot_per) + "%\n"
+
+    return out
 
 
 # def output_to_pdf(output, file_name):
