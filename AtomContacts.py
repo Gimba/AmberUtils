@@ -21,6 +21,8 @@ import re
 import sys
 from collections import Counter
 
+import cairo
+
 import CalcResNum1iqd
 import CpptrajHelper as cpp
 import ListHelper as lst
@@ -496,9 +498,10 @@ def write_results(trajin, init, muta, prod, all_interesting):
 
 
 def write_output(output, file_name):
-    prepare_output(output)
+    output = prepare_output(output)
     with open(file_name, 'w') as f:
         f.write(output)
+    output_to_pdf(output, file_name)
 
 
 def convert_res_numbers(contact_atoms):
@@ -579,16 +582,33 @@ def prepare_output(output):
     return out
 
 
-# def output_to_pdf(output, file_name):
-#     surface = cairo.PDFSurface(file_name, 500, 500)
-#     ctx = cairo.Context(surface)
-#     ctx.set_font_size(20)
-#     ctx.set_source_rgb(0, 0, 0)
-#     ctx.move_to(100, 80)
-#     ctx.show_text("title")
-#     surface.write_to_png("test.png")
-#     surface.finish()
-#     surface.flush()
+def output_to_pdf(output, file_name):
+    file_name = file_name.split('_')[0]
+    surface = cairo.PDFSurface(file_name + '_occupancies.pdf', 595, 842)
+    ctx = cairo.Context(surface)
+
+    # title
+    ctx.set_font_size(20)
+    ctx.set_source_rgb(0, 0, 0)
+    ctx.move_to(20, 30)
+    ctx.show_text(file_name)
+
+    x = 20
+    y = 60
+    ctx.set_font_size(14)
+    output = output.splitlines()
+    for line in output:
+        print line
+        line = line.split(',')
+        for item in line:
+            ctx.move_to(x, y)
+            ctx.show_text(item)
+            x += 85
+        y += 16
+        x = 20
+
+    surface.finish()
+    surface.flush()
 
 if __name__ == "__main__":
     main(sys.argv)
