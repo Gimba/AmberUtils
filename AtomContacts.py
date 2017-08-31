@@ -15,7 +15,6 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
 import argparse
 import os
 import re
@@ -64,16 +63,16 @@ def main(argv):
 
     if args.avrgs:
         avrgs = args.avrgs
-    print "calculate averages " + avrgs
+    print "calculate averages " + str(bool(avrgs))
 
 
     if args.wat:
         wat = args.wat
-    print "strip water " + wat
+    print "strip water " + str(bool(wat))
 
     if args.hydro:
         hydro = args.hydro
-    print "strip hydorgen " + hydro
+    print "strip hydorgen " + str(bool(hydro))
 
     results_folder = 'contacts/'
 
@@ -146,7 +145,6 @@ def main(argv):
 
     if avrgs:
         header.extend(["Init", "Mutation", "Simulation"])
-    print header
     occ_list = [header] + occ_list
     occ_list = [top_header] + occ_list
 
@@ -498,6 +496,7 @@ def write_results(trajin, init, muta, prod, all_interesting):
 
 
 def write_output(output, file_name):
+    prepare_output(output)
     with open(file_name, 'w') as f:
         f.write(output)
 
@@ -519,6 +518,59 @@ def convert_res_numbers(contact_atoms):
 
     return out_list
 
+
+def prepare_output(output):
+    output = output.splitlines()
+    init_tot = 0
+    muta_tot = 0
+    sim_tot = 0
+
+    init_res = 0
+    muta_res = 0
+    sim_res = 0
+
+    last_res = ""
+    out = ""
+    for line in output:
+        l = line
+        if line[0] == ':':
+            line = line.split(',')
+            init_tot += int(line[1])
+            muta_tot += int(line[2])
+            sim_tot += int(line[3])
+
+            res = line[0].split('@')[0]
+            if last_res == "":
+                last_res = res
+
+            if last_res == res:
+                init_res += int(line[1])
+                muta_res += int(line[2])
+                sim_res += int(line[3])
+
+            else:
+                out += "," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "\n"
+                last_res = res
+                init_res = int(line[1])
+                muta_res = int(line[2])
+                sim_res = int(line[3])
+        out += l + "\n"
+    out += "," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "\n"
+    out += "total," + str(init_tot) + "," + str(muta_tot) + "," + str(sim_tot) + "\n"
+
+    print out
+
+
+# def output_to_pdf(output, file_name):
+#     surface = cairo.PDFSurface(file_name, 500, 500)
+#     ctx = cairo.Context(surface)
+#     ctx.set_font_size(20)
+#     ctx.set_source_rgb(0, 0, 0)
+#     ctx.move_to(100, 80)
+#     ctx.show_text("title")
+#     surface.write_to_png("test.png")
+#     surface.finish()
+#     surface.flush()
 
 if __name__ == "__main__":
     main(sys.argv)
