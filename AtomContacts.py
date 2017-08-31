@@ -64,15 +64,16 @@ def main(argv):
 
     if args.avrgs:
         avrgs = args.avrgs
-        print avrgs
+    print "calculate averages " + avrgs
+
 
     if args.wat:
         wat = args.wat
-        print wat
+    print "strip water " + wat
 
     if args.hydro:
         hydro = args.hydro
-        print hydro
+    print "strip hydorgen " + hydro
 
     results_folder = 'contacts/'
 
