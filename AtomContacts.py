@@ -597,6 +597,7 @@ def output_to_pdf(output, file_name):
     y = 60
     ctx.set_font_size(14)
     output = output.splitlines()
+    pages = 0
     for line in output:
         print line
         line = line.split(',')
@@ -606,6 +607,14 @@ def output_to_pdf(output, file_name):
             x += 85
         y += 16
         x = 20
+        if y > 820:
+            pages += 1
+            surface.finish()
+            surface.flush()
+            surface = cairo.PDFSurface(file_name + str(pages) + '_occupancies.pdf', 595, 842)
+            ctx = cairo.Context(surface)
+            ctx.set_font_size(14)
+            y = 30
 
     surface.finish()
     surface.flush()
