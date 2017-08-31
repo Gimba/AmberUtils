@@ -76,8 +76,7 @@ def create_all_atom_residue_list(atom_list, atom_types):
     return out
 
 
-# generates pdb file in the working directory from parameters. Returns the name of the pdb file. Water and hydrogen
-# stripped
+# generates pdb file in the working directory from parameters. Returns the name of the pdb file.
 def generate_pdb(prmtop, trajin, wat, hydro):
     cpptraj = create_pdb_cpptraj(prmtop, trajin, wat, hydro)
     run_cpptraj(prmtop, trajin, cpptraj[0])
