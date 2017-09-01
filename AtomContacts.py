@@ -605,10 +605,39 @@ def output_to_pdf(output, file_name):
     for line in output:
         print line
         line = line.split(',')
-        for item in line:
+        ctx.set_source_rgb(0, 0, 0)
+
+        # coloring
+        if len(line[0]) > 0 and line[0][0] == ':' or line[0] == 'SUM':
             ctx.move_to(x, y)
-            ctx.show_text(item)
+            ctx.show_text(line[0])
             x += 100
+            ctx.move_to(x, y)
+            ctx.show_text(line[1])
+            x += 100
+
+            if int(line[1]) > int(line[2]):
+                ctx.set_source_rgb(0.9, 0, 0)
+            if int(line[1]) < int(line[2]):
+                ctx.set_source_rgb(0, 0.7, 0)
+            ctx.move_to(x, y)
+            ctx.show_text(line[2])
+            x += 100
+
+            if int(line[1]) > int(line[3]):
+                ctx.set_source_rgb(0.9, 0, 0)
+            if int(line[1]) < int(line[3]):
+                ctx.set_source_rgb(0, 0.7, 0)
+            ctx.move_to(x, y)
+            ctx.show_text(line[3])
+            x += 100
+
+        else:
+            for item in line:
+                ctx.move_to(x, y)
+                ctx.show_text(item)
+                x += 100
+
         y += 16
         x = 20
         if y > 820:
