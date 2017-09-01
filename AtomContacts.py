@@ -167,8 +167,14 @@ def main(argv):
     occ_list = [header] + occ_list
     occ_list = [top_header] + occ_list
 
+    # format output
     output = lst.output_2D_list(occ_list)
+    output = prepare_output(output)
+    output = add_residue_types(output, residues)
+
+    # write output
     write_output(output, prmtop_muta.split('.')[0] + '_occupancies.dat')
+    output_to_pdf(output, prmtop_muta.split('.')[0] + '_occupancies.dat')
 
 
 def add_averages_column(lst, avrgs):
@@ -515,10 +521,8 @@ def write_results(trajin, init, muta, prod, all_interesting):
 
 
 def write_output(output, file_name):
-    output = prepare_output(output)
     with open(file_name, 'w') as f:
         f.write(output)
-    output_to_pdf(output, file_name)
 
 
 def convert_res_numbers(contact_atoms):
@@ -600,10 +604,21 @@ def prepare_output(output):
 
 
 # method to add residue types to the output
-# def add_residue_types(output, types):
-#
-#     for line in output:
-#         if line[0] == ':':
+def add_residue_types(output, types):
+    out = []
+    output = output.splitlines()
+    for line in output:
+        if len(line) > 0 and line[0] == ':':
+            residue = line.split('@')[0]
+            residue = residue.strip(':')
+            print residue
+            for item in types:
+                if item[1] == residue:
+                    line = line[0] + item[0] + line[1:]
+
+        out.append(line)
+    return '\n'.join(out)
+
 
 
 def output_to_pdf(output, file_name):
@@ -633,10 +648,10 @@ def output_to_pdf(output, file_name):
         if len(line[0]) > 0 and line[0][0] == ':' or line[0] == 'SUM':
             ctx.move_to(x, y)
             ctx.show_text(line[0])
-            x += 100
+            x += 120
             ctx.move_to(x, y)
             ctx.show_text(line[1])
-            x += 100
+            x += 120
 
             if int(line[1]) > int(line[2]):
                 ctx.set_source_rgb(0.9, 0, 0)
@@ -644,7 +659,7 @@ def output_to_pdf(output, file_name):
                 ctx.set_source_rgb(0, 0.7, 0)
             ctx.move_to(x, y)
             ctx.show_text(line[2])
-            x += 100
+            x += 120
 
             if int(line[1]) > int(line[3]):
                 ctx.set_source_rgb(0.9, 0, 0)
@@ -652,13 +667,13 @@ def output_to_pdf(output, file_name):
                 ctx.set_source_rgb(0, 0.7, 0)
             ctx.move_to(x, y)
             ctx.show_text(line[3])
-            x += 100
+            x += 120
 
         else:
             for item in line:
                 ctx.move_to(x, y)
                 ctx.show_text(item)
-                x += 100
+                x += 120
 
         y += 16
         x = 20
