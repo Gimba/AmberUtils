@@ -98,6 +98,22 @@ def main(argv):
     # get a list of types present in a atom list
     types = pdb.get_all_atom_types(atom_list_unmutated)
 
+    # get a list of all residues with residue numbers
+    residues = pdb.get_all_residues(atom_list_unmutated)
+
+    # convert residue numbers
+    temp = []
+    for item in residues:
+        temp.append(item.split(','))
+
+    residues = temp
+    res_numbers = convert_res_numbers(lst.c_get(residues, 1))
+    residues = lst.c_del(residues, 1)
+    residues = lst.c_bind(residues, res_numbers)
+    types = pdb.convert_res_types(lst.c_get(residues, 0))
+    residues = lst.c_del(residues, 0)
+    residues = lst.c_bind(types, residues)
+
     if avrgs:
         avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, types, wat, hydro)
 
@@ -583,6 +599,13 @@ def prepare_output(output):
     return out
 
 
+# method to add residue types to the output
+# def add_residue_types(output, types):
+#
+#     for line in output:
+#         if line[0] == ':':
+
+
 def output_to_pdf(output, file_name):
     file_name = file_name.split('_')[0]
     f = file_name + '0_occupancies.pdf'
@@ -603,7 +626,6 @@ def output_to_pdf(output, file_name):
     files = []
 
     for line in output:
-        print line
         line = line.split(',')
         ctx.set_source_rgb(0, 0, 0)
 
