@@ -75,7 +75,7 @@ def main(argv):
 
     if args.hydro:
         hydro = args.hydro
-    print "strip hydorgen " + str(bool(hydro))
+    print "strip hydrogen " + str(bool(hydro))
 
     results_folder = 'contacts/'
 
@@ -652,6 +652,7 @@ def output_to_pdf(output, file_name):
             ctx.move_to(x, y)
             ctx.show_text(line[1])
             x += 120
+            ctx.set_source_rgb(0, 0, 0)
 
             if int(line[1]) > int(line[2]):
                 ctx.set_source_rgb(0.9, 0, 0)
@@ -660,6 +661,7 @@ def output_to_pdf(output, file_name):
             ctx.move_to(x, y)
             ctx.show_text(line[2])
             x += 120
+            ctx.set_source_rgb(0, 0, 0)
 
             if int(line[1]) > int(line[3]):
                 ctx.set_source_rgb(0.9, 0, 0)
@@ -668,6 +670,7 @@ def output_to_pdf(output, file_name):
             ctx.move_to(x, y)
             ctx.show_text(line[3])
             x += 120
+            ctx.set_source_rgb(0, 0, 0)
 
         else:
             for item in line:
