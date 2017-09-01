@@ -35,7 +35,7 @@ def get_all_atom_types(atom_list):
 def get_all_residues(atom_list):
     residues = []
     for residue in atom_list:
-        if residue[2] != 'WAT':
+        if residue[2] != 'WAT' and residue[2] != 'Cl-':
             residues.append(residue[2] + "," + residue[3])
 
     residues = list(set(residues))
@@ -54,3 +54,39 @@ def get_all_residue_numbers(atom_list):
     residue_numbers = sorted(residue_numbers)
 
     return residue_numbers
+
+
+# convert residue types taxonomy
+def convert_res_types(res_types):
+    res_codes = {}
+    res_codes['ALA'] = 'A'
+    res_codes['ARG'] = 'R'
+    res_codes['ASN'] = 'N'
+    res_codes['ASP'] = 'D'
+    res_codes['CYS'] = 'C'
+    res_codes['CYX'] = 'C'
+    res_codes['GLU'] = 'E'
+    res_codes['GLN'] = 'Q'
+    res_codes['GLY'] = 'G'
+    res_codes['HIS'] = 'H'
+    res_codes['HIE'] = 'H'
+    res_codes['HID'] = 'H'
+    res_codes['HIP'] = 'H'
+    res_codes['ILE'] = 'I'
+    res_codes['LEU'] = 'L'
+    res_codes['LYS'] = 'K'
+    res_codes['MET'] = 'M'
+    res_codes['PHE'] = 'F'
+    res_codes['PRO'] = 'P'
+    res_codes['SER'] = 'S'
+    res_codes['THR'] = 'T'
+    res_codes['TRP'] = 'W'
+    res_codes['TYR'] = 'Y'
+    res_codes['VAL'] = 'V'
+
+    out = []
+    for item in res_types:
+        if len(res_types[0]) > 1:
+            out.append(res_codes[item])
+
+    return out
