@@ -31,6 +31,18 @@ def get_all_atom_types(atom_list):
     return types
 
 
+# returns a list of residues with numbering of a pdb list
+def get_all_residues(atom_list):
+    residues = []
+    for residue in atom_list:
+        if residue[2] != 'WAT':
+            residues.append(residue[2] + "," + residue[3])
+
+    residues = list(set(residues))
+
+    return residues
+
+
 # returns a list of residue numbers of a pdb list
 def get_all_residue_numbers(atom_list):
     residue_numbers = []
