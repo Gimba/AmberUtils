@@ -537,7 +537,6 @@ def convert_res_numbers(contact_atoms):
             temp1 = re.findall("\d+", item[1])[0]
             temp1_new = CalcResNum1iqd.convert(temp1)
             item[1] = item[1].replace(temp1, temp1_new)
-
         out_list.append('_'.join(item))
 
     return out_list
@@ -614,7 +613,10 @@ def add_residue_types(output, types):
             print residue
             for item in types:
                 if item[1] == residue:
+                    # e.g. ":SA32"
                     line = line[0] + item[0] + line[1:]
+                    # e.g. "A:S32"
+                    line = line[2] + line[0] + line[1] + line[3:]
 
         out.append(line)
     return '\n'.join(out)
@@ -645,7 +647,7 @@ def output_to_pdf(output, file_name):
         ctx.set_source_rgb(0, 0, 0)
 
         # coloring
-        if len(line[0]) > 0 and line[0][0] == ':' or line[0] == 'SUM':
+        if len(line[0]) > 0 and line[0][1] == ':' or line[0] == 'SUM':
             ctx.move_to(x, y)
             ctx.show_text(line[0])
             x += 120
