@@ -51,7 +51,9 @@ def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
 # Water, Chlor and hydrogen stripped
 def create_pdb_cpptraj(prmtop, trajin, wat, hydro):
     prmtop = prmtop.split('.')[0]
+    prmtop = prmtop.split('/')[-1]
     trajin = trajin.split('.')[0]
+    trajin = trajin.split('/')[-1]
     cpptraj_file = prmtop + "_pdb.cpptraj"
     pdb = prmtop + "_" + trajin + ".pdb"
 
