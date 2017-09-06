@@ -15,8 +15,8 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
 import argparse
+import sys
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
@@ -37,21 +37,26 @@ def convert(number):
     out = ""
     # to 1iqd numbering
 
+    # C2 domain residues
     if number < 157:
-        out = number + 2173
+        out = 'C' + str(number + 2173)
+    # BO2C11 light chain A (2 - 212)
     elif 157 <= number <= 367:
-        out = str(number - 155)
+        out = 'A' + str(number - 155)
+    # BO2C11 heavy chain B (1 - 83)
     elif 368 <= number <= 450:
-        out = str(number - 367)
-    # residue 83 is followed by 83A, 83B, 83C
+        out = 'B' + str(number - 367)
+    # BO2C11 light chain B residue 83 is followed by 83A, 83B, 83C
     elif number == 451:
-        out = "83A"
+        out = 'B' + "83A"
     elif number == 452:
-        out = "83B"
+        out = 'B' + "83B"
     elif number == 453:
-        out = "83C"
+        out = 'B' + "83C"
+    # BO2C11 heavy chain B (84 - 212)
     elif 455 <= number <= 582:
-        out = str(number - 370)
+        out = 'B' + str(number - 370)
+    # other direction
     elif number > 2173:
         out = number - 2173
         # elif 1 <= number <= 212:
@@ -59,7 +64,7 @@ def convert(number):
         #         out = str(number + 155) + " A"
         #     elif chain == "B":
         #         out = str(number + 367) + " B"
-    print out
+    # print out
     return str(out)
 if __name__ == "__main__":
     main(sys.argv)
