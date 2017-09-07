@@ -40,6 +40,7 @@ def main(argv):
     parser.add_argument('pdb_mutated', help='mutated structure')
     parser.add_argument('trajin_mutated_init', help='trajectory for mutated structure')
     parser.add_argument('trajin_mutated_simulation', help='trajectory for mutated structure after simulation')
+    parser.add_argument('-f', '--frames', nargs='?', help='select frames')
     parser.add_argument('mutation', help='mutated structure')
     parser.add_argument('-a', '--avrgs', help='calculate averages', action='store_true')
     parser.add_argument('-w', '--wat', help='strip water', action='store_true')
@@ -63,11 +64,14 @@ def main(argv):
     avrgs = 0
     wat = 0
     hydro = 0
-
+    frames = 0
     if args.avrgs:
         avrgs = args.avrgs
     print "calculate averages " + str(bool(avrgs))
 
+    if args.frames:
+        frames = args.frames
+        print "selected frames" + frames
 
     if args.wat:
         wat = args.wat
@@ -136,8 +140,13 @@ def main(argv):
     occ_muta = get_occupancy_of_atoms(prmtop_muta, trajin_muta, atoms, wat, hydro)
 
     # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
-    occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms, wat, hydro)
 
+    if frames:
+        trajin_frames = "\"" + trajin_sim + frames + "\""
+        print trajin_frames
+        occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_frames, atoms, wat, hydro)
+    else:
+        occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms, wat, hydro)
     ##### reformat data #####
 
     occ_list = lst.c_bind(occ_init, occ_muta)
@@ -371,9 +380,30 @@ def get_interesting_atoms(init, muta, sim):
 
 
 def get_atom_occupancy(occupancy_atoms):
-    occupancy_atoms = [item.split('_')[0] for item in occupancy_atoms]
-    out = Counter(occupancy_atoms)
-    out = out.items()
+    # occupancy_atoms = [item[0].split('_')[0] for item in occupancy_atoms]
+    counter = 0
+    last_atom = ""
+    out = []
+    for item in occupancy_atoms:
+        atom = item[0].split('_')[0]
+        contacts = int(item[1])
+        if last_atom == "":
+            last_atom = atom
+        if last_atom == atom:
+            counter += contacts
+        else:
+            # TODO: solve this quick fix
+            if counter > 100:
+                counter = counter / 100
+
+            out.append([atom, counter])
+            counter = 0
+            last_atom = atom
+
+    # out = Counter(occupancy_atoms)
+    # out = out.items()
+
+    print out
     return out
 
 
@@ -391,8 +421,9 @@ def get_atom_contacts(data_file, residue):
                     # line = line[1].split("_")[1]
                     # line = line.split('@')[0]
                     # line = line.replace(':', '')
-                    line = line[1]
-                    contact_atoms.append(line)
+                    atom = line[1]
+                    contacts = line[2]
+                    contact_atoms.append([atom, contacts])
 
     return contact_atoms
 
@@ -402,7 +433,7 @@ def extract_atoms(contact_atoms):
 
     for item in contact_atoms:
         # :23@N_:22@O -> :22@O
-        item = item.split('_')[1]
+        item = item[0].split('_')[1]
         # :22@O -> 22@O
         item = item.replace(':', '')
         if item.split('@')[0] != '23':

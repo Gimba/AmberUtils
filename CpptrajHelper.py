@@ -20,8 +20,10 @@ def read_cpptraj_contacts_data(file_name):
 
 # executes the cpptraj with the given parameters, outputs of will be written as files specified in the cpptraj file
 def run_cpptraj(prmtop, trajin, cpptraj_file):
-    os.system('cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file + ' > ' + cpptraj_file.replace('.', '_')
-              + ".log")
+    cpptraj = 'cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file + ' > ' + cpptraj_file.replace('.',
+                                                                                                              '_') + ".log"
+    print cpptraj
+    os.system(cpptraj)
 
 
 # creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
@@ -29,7 +31,7 @@ def run_cpptraj(prmtop, trajin, cpptraj_file):
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
 # F2196A_contacts.cpptraj). Water, Chlor and hydrogen stripped
 def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
-    cpptraj_file = trajin.split('.')[0] + "_" + trajin.split('.')[1] + "_contacts.cpptraj"
+    cpptraj_file = trajin.split('.')[0].strip("\"") + "_" + trajin.split('.')[1].split()[0] + "_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
     with open(cpptraj_file, 'w') as f:
