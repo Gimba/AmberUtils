@@ -158,14 +158,14 @@ def main(argv):
     occ_list.sort()
     occ_list = [x[1] for x in occ_list]
 
-    top_header = ["", "Occupancies", "", ""]
+    top_header = ["", "", "Occupancies", ""]
     if avrgs:
-        top_header.extend(["Averages", "", "", ""])
+        top_header.extend(["", "Averages", "", ""])
 
-    header = ["Atom", "Init", "Mutation", "Simulation"]
+    header = ["Atom", "Init", "Muta", "Sim"]
 
     if avrgs:
-        header.extend(["Init", "Mutation", "Simulation"])
+        header.extend(["Init", "Muta", "Sim"])
     occ_list = [header] + occ_list
     occ_list = [top_header] + occ_list
 
@@ -549,10 +549,16 @@ def prepare_output(output):
     init_tot = 0
     muta_tot = 0
     sim_tot = 0
+    avg_init_tot = 0
+    avg_sim_tot = 0
+    avg_muta_tot = 0
 
     init_res = 0
     muta_res = 0
     sim_res = 0
+    avg_init_res = 0
+    avg_sim_res = 0
+    avg_muta_res = 0
 
     last_res = ""
     out = ""
@@ -563,6 +569,9 @@ def prepare_output(output):
             init_tot += int(line[1])
             muta_tot += int(line[2])
             sim_tot += int(line[3])
+            avg_init_tot += float(line[4])
+            avg_muta_tot += float(line[5])
+            avg_sim_tot += float(line[6])
 
             res = line[0].split('@')[0]
             if last_res == "":
@@ -572,34 +581,60 @@ def prepare_output(output):
                 init_res += int(line[1])
                 muta_res += int(line[2])
                 sim_res += int(line[3])
+                avg_init_res += float(line[4])
+                avg_muta_res += float(line[5])
+                avg_sim_res += float(line[6])
 
             else:
-                out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "\n"
+                out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "," + str(
+                    avg_init_res) + "," + str(avg_muta_res) + "," + str(avg_sim_res) + "\n"
                 # percentages
                 muta_res_per = (init_res - muta_res) * 100 / init_res
                 sim_res_per = (init_res - sim_res) * 100 / init_res
-                out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%\n\n"
+
+                avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
+                avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
+
+                out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%,," + str(
+                    round(avg_muta_res_per, 2)) + "%," + str(round(avg_sim_res_per, 2)) + "%\n\n"
 
                 last_res = res
                 init_res = int(line[1])
                 muta_res = int(line[2])
                 sim_res = int(line[3])
+                avg_init_res = float(line[4])
+                avg_muta_res = float(line[5])
+                avg_sim_res = float(line[6])
+
         out += l + "\n"
 
-    out += "," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "\n"
+    out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "," + str(avg_init_res) + "," + str(
+        avg_muta_res) + "," + str(avg_sim_res) + "\n"
 
     # percentages
     muta_res_per = (init_res - muta_res) * 100 / init_res
     sim_res_per = (init_res - sim_res) * 100 / init_res
-    out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%\n\n"
+
+    avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
+    avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
+
+    out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%,," + str(round(avg_muta_res_per, 2)) + "%," + str(
+        round(
+            avg_sim_res_per)) + "%\n\n"
 
     # totals
-    out += "total," + str(init_tot) + "," + str(muta_tot) + "," + str(sim_tot) + "\n"
+    out += "total," + str(init_tot) + "," + str(muta_tot) + "," + str(sim_tot) + "," + str(
+        round(avg_init_tot, 2)) + "," + str(round(avg_sim_tot, 2)) + "," + str(round(avg_muta_tot, 2)) + "\n"
 
     # total percentages
     muta_tot_per = (init_tot - muta_tot) * 100 / init_tot
     sim_tot_per = (init_tot - sim_tot) * 100 / init_tot
-    out += ",," + str(muta_tot_per) + "%," + str(sim_tot_per) + "%\n"
+
+    avg_muta_tot_per = (avg_init_tot - avg_muta_tot) * 100 / avg_init_tot
+    avg_sim_tot_per = (avg_init_tot - avg_sim_tot) * 100 / avg_init_tot
+
+    out += ",," + str(muta_tot_per) + "%," + str(sim_tot_per) + "%,," + str(round(avg_muta_tot_per, 2)) + "%," + str(
+        round(avg_sim_tot_per, 2)) + "%\n"
 
     return out
 
@@ -678,9 +713,9 @@ def output_to_pdf(output, file_name):
             x += 75
             ctx.set_source_rgb(0, 0, 0)
 
-            if int(line[1]) > int(line[3]):
+            if float(line[1]) > float(line[3]):
                 ctx.set_source_rgb(0.9, 0, 0)
-            if int(line[1]) < int(line[3]):
+            if float(line[1]) < float(line[3]):
                 ctx.set_source_rgb(0, 0.7, 0)
             ctx.move_to(x, y)
             ctx.show_text(line[3])
@@ -691,10 +726,16 @@ def output_to_pdf(output, file_name):
                 ctx.move_to(x, y)
                 ctx.show_text(str(round(float(line[4]), 2)))
                 x += 75
-                #
-                # ctx.move_to(x, y)
-                # ctx.show_text(line[3])
-                # x += 120
+
+            if len(line) > 5:
+                ctx.move_to(x, y)
+                ctx.show_text(str(round(float(line[5]), 2)))
+                x += 75
+
+            if len(line) > 6:
+                ctx.move_to(x, y)
+                ctx.show_text(str(round(float(line[6]), 2)))
+                x += 75
         else:
             for item in line[1:]:
                 ctx.move_to(x, y)
