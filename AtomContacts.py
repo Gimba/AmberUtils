@@ -171,12 +171,12 @@ def main(argv):
 
     # format output
     output = lst.output_2D_list(occ_list)
-    output = prepare_output(output)
+    output = prepare_output(output, avrgs)
     output = add_residue_types(output, residues)
 
     # write output
     write_output(output, prmtop_muta.split('.')[0] + '_occupancies.dat')
-    output_to_pdf(output, prmtop_muta.split('.')[0] + '_occupancies.dat')
+    output_to_pdf(output, prmtop_muta.split('.')[0] + '_occupancies.dat', avrgs)
 
 
 def add_averages_column(lst, avrgs):
@@ -544,24 +544,26 @@ def convert_res_numbers(contact_atoms):
     return out_list
 
 
-def prepare_output(output):
+def prepare_output(output, avrgs):
     output = output.splitlines()
     init_tot = 0
     muta_tot = 0
     sim_tot = 0
-    avg_init_tot = 0
-    avg_sim_tot = 0
-    avg_muta_tot = 0
-
     init_res = 0
     muta_res = 0
     sim_res = 0
-    avg_init_res = 0
-    avg_sim_res = 0
-    avg_muta_res = 0
+
+    if avrgs:
+        avg_init_tot = 0
+        avg_sim_tot = 0
+        avg_muta_tot = 0
+        avg_init_res = 0
+        avg_sim_res = 0
+        avg_muta_res = 0
 
     last_res = ""
     out = ""
+
     for line in output:
         l = line
         if line[0] == ':':
@@ -569,72 +571,90 @@ def prepare_output(output):
             init_tot += int(line[1])
             muta_tot += int(line[2])
             sim_tot += int(line[3])
-            avg_init_tot += float(line[4])
-            avg_muta_tot += float(line[5])
-            avg_sim_tot += float(line[6])
+
+            if avrgs:
+                avg_init_tot += float(line[4])
+                avg_muta_tot += float(line[5])
+                avg_sim_tot += float(line[6])
 
             res = line[0].split('@')[0]
             if last_res == "":
                 last_res = res
 
-            if last_res == res:
-                init_res += int(line[1])
-                muta_res += int(line[2])
-                sim_res += int(line[3])
+            # add up values for the current residue
+            init_res += int(line[1])
+            muta_res += int(line[2])
+            sim_res += int(line[3])
+
+            if avrgs:
                 avg_init_res += float(line[4])
                 avg_muta_res += float(line[5])
                 avg_sim_res += float(line[6])
 
-            else:
-                out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "," + str(
-                    avg_init_res) + "," + str(avg_muta_res) + "," + str(avg_sim_res) + "\n"
-                # percentages
+            # behavior if a new residue starts
+            if last_res != res:
+                last_res = res
+
+                # add line with sum of contacts a selected residue
+                out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res)
+                if avrgs:
+                    out += "," + str(avg_init_res) + "," + str(avg_muta_res) + "," + str(avg_sim_res)
+                out += "\n"
+
+                # add line with percentage values
                 muta_res_per = (init_res - muta_res) * 100 / init_res
                 sim_res_per = (init_res - sim_res) * 100 / init_res
 
-                avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
-                avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
+                out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%"
+                if avrgs:
+                    avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
+                    avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
+                    out += ",," + str(round(avg_muta_res_per, 2)) + "%," + str(round(avg_sim_res_per, 2)) + "%"
+                out += "\n\n"
 
-                out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%,," + str(
-                    round(avg_muta_res_per, 2)) + "%," + str(round(avg_sim_res_per, 2)) + "%\n\n"
-
-                last_res = res
+                # reset values for summing up residue contacts to start from first values of new residue
                 init_res = int(line[1])
                 muta_res = int(line[2])
                 sim_res = int(line[3])
-                avg_init_res = float(line[4])
-                avg_muta_res = float(line[5])
-                avg_sim_res = float(line[6])
-
+                if avrgs:
+                    avg_init_res = float(line[4])
+                    avg_muta_res = float(line[5])
+                    avg_sim_res = float(line[6])
         out += l + "\n"
 
-    out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res) + "," + str(avg_init_res) + "," + str(
-        avg_muta_res) + "," + str(avg_sim_res) + "\n"
+    # handling of last residue
+    out += "SUM," + str(init_res) + "," + str(muta_res) + "," + str(sim_res)
+    if avrgs:
+        out += "," + str(avg_init_res) + "," + str(avg_muta_res) + "," + str(avg_sim_res)
+    out += "\n"
 
-    # percentages
+    # add line with percentage values
     muta_res_per = (init_res - muta_res) * 100 / init_res
     sim_res_per = (init_res - sim_res) * 100 / init_res
+    out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%"
+    if avrgs:
+        avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
+        avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
+        out += ",," + str(round(avg_muta_res_per, 2)) + "%," + str(round(avg_sim_res_per, 2)) + "%"
+    out += "\n\n"
 
-    avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
-    avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
-
-    out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%,," + str(round(avg_muta_res_per, 2)) + "%," + str(
-        round(
-            avg_sim_res_per)) + "%\n\n"
-
-    # totals
-    out += "total," + str(init_tot) + "," + str(muta_tot) + "," + str(sim_tot) + "," + str(
-        round(avg_init_tot, 2)) + "," + str(round(avg_sim_tot, 2)) + "," + str(round(avg_muta_tot, 2)) + "\n"
+    # total values at the end of document
+    out += "total," + str(init_tot) + "," + str(muta_tot) + "," + str(sim_tot)
+    if avrgs:
+        out += "," + str(round(avg_init_tot, 2)) + "," + str(round(avg_sim_tot, 2)) + "," + str(round(avg_muta_tot, 2))
+    out += "\n"
 
     # total percentages
     muta_tot_per = (init_tot - muta_tot) * 100 / init_tot
     sim_tot_per = (init_tot - sim_tot) * 100 / init_tot
 
-    avg_muta_tot_per = (avg_init_tot - avg_muta_tot) * 100 / avg_init_tot
-    avg_sim_tot_per = (avg_init_tot - avg_sim_tot) * 100 / avg_init_tot
-
-    out += ",," + str(muta_tot_per) + "%," + str(sim_tot_per) + "%,," + str(round(avg_muta_tot_per, 2)) + "%," + str(
-        round(avg_sim_tot_per, 2)) + "%\n"
+    out += ",," + str(muta_tot_per) + "%," + str(sim_tot_per) + "%"
+    if avrgs:
+        avg_muta_tot_per = (avg_init_tot - avg_muta_tot) * 100 / avg_init_tot
+        avg_sim_tot_per = (avg_init_tot - avg_sim_tot) * 100 / avg_init_tot
+        out += ",," + str(round(avg_muta_tot_per, 2)) + "%," + str(
+            round(avg_sim_tot_per, 2)) + "%"
+    out += "\n"
 
     return out
 
@@ -669,8 +689,7 @@ def add_residue_types(output, types):
     return '\n'.join(out)
 
 
-
-def output_to_pdf(output, file_name):
+def output_to_pdf(output, file_name, avrgs):
     file_name = file_name.split('_')[0]
     f = file_name + '0_occupancies.pdf'
     surface = cairo.PDFSurface(f, 595, 842)
@@ -722,17 +741,13 @@ def output_to_pdf(output, file_name):
             x += 75
             ctx.set_source_rgb(0, 0, 0)
 
-            if len(line) > 4:
+            if avrgs:
                 ctx.move_to(x, y)
                 ctx.show_text(str(round(float(line[4]), 2)))
                 x += 75
-
-            if len(line) > 5:
                 ctx.move_to(x, y)
                 ctx.show_text(str(round(float(line[5]), 2)))
                 x += 75
-
-            if len(line) > 6:
                 ctx.move_to(x, y)
                 ctx.show_text(str(round(float(line[6]), 2)))
                 x += 75
