@@ -47,6 +47,24 @@ def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
     return [cpptraj_file, out_file]
 
 
+# get contacts for atom types
+def create_contact_cpptraj_types(trajin, types, wat, hydro):
+    cpptraj_file = trajin.split('.')[0] + "_" + trajin.split('.')[1] + "_contacts_types.cpptraj"
+    out_file = cpptraj_file.replace('cpptraj', 'dat')
+
+    with open(cpptraj_file, 'w') as f:
+        if wat:
+            f.write('strip :WAT\n')
+        if hydro:
+            f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+
+        for item in types:
+            f.write('nativecontacts :*' + item + ' writecontacts ' +
+                    out_file + ' distance 3.9\n')
+        f.write('go')
+
+    return [cpptraj_file, out_file]
+
 # creates a cpptraj file to generate a pdb from the given inputs. Returns name of cpptraj file and name of pdb file.
 # Water, Chlor and hydrogen stripped
 def create_pdb_cpptraj(prmtop, trajin, wat, hydro):

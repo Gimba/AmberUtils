@@ -123,9 +123,9 @@ def main(argv):
     if avrgs:
         avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, atom_types, wat, hydro)
 
-        avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, types, wat, hydro)
+        avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, atom_types, wat, hydro)
 
-        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, types, wat, hydro)
+        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, atom_types, wat, hydro)
 
     ##### get occupancy of atoms in contact with the mutation #####
 
@@ -209,10 +209,10 @@ def get_contacting_atoms(prmtop, trajin, residue, wat, hydro):
 
 # returns the averages for all types of atoms in a given prmtop file and trajectory
 def get_contact_averages_of_types(prmtop, trajin, types, wat, hydro):
-    pdb_file = cpp.generate_pdb(prmtop, trajin, wat, hydro)
-    atom_list = pdb.read_pdb_atoms(pdb_file, wat)
-    residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
-    model_contacts_mutated = cpp.create_contact_cpptraj(trajin, residue_atom_list, ['1-5000'], wat, hydro)
+    # pdb_file = cpp.generate_pdb(prmtop, trajin, wat, hydro)
+    # atom_list = pdb.read_pdb_atoms(pdb_file, wat)
+    # residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
+    model_contacts_mutated = cpp.create_contact_cpptraj_types(trajin, types, wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_contacts_mutated[0])
     avrgs = get_occupancy_averages_of_types(model_contacts_mutated[1], types)
     return avrgs
@@ -658,14 +658,15 @@ def output_to_pdf(output, file_name):
         line = line.split(',')
         ctx.set_source_rgb(0, 0, 0)
 
+        ctx.move_to(x, y)
+        ctx.show_text(line[0])
+        x += 120
+
         # coloring
         if len(line[0]) > 0 and line[0][1] == ':' or line[0] == 'SUM':
             ctx.move_to(x, y)
-            ctx.show_text(line[0])
-            x += 120
-            ctx.move_to(x, y)
             ctx.show_text(line[1])
-            x += 120
+            x += 75
             ctx.set_source_rgb(0, 0, 0)
 
             if int(line[1]) > int(line[2]):
@@ -674,7 +675,7 @@ def output_to_pdf(output, file_name):
                 ctx.set_source_rgb(0, 0.7, 0)
             ctx.move_to(x, y)
             ctx.show_text(line[2])
-            x += 120
+            x += 75
             ctx.set_source_rgb(0, 0, 0)
 
             if int(line[1]) > int(line[3]):
@@ -683,14 +684,22 @@ def output_to_pdf(output, file_name):
                 ctx.set_source_rgb(0, 0.7, 0)
             ctx.move_to(x, y)
             ctx.show_text(line[3])
-            x += 120
+            x += 75
             ctx.set_source_rgb(0, 0, 0)
 
+            if len(line) > 4:
+                ctx.move_to(x, y)
+                ctx.show_text(str(round(float(line[4]), 2)))
+                x += 75
+                #
+                # ctx.move_to(x, y)
+                # ctx.show_text(line[3])
+                # x += 120
         else:
-            for item in line:
+            for item in line[1:]:
                 ctx.move_to(x, y)
                 ctx.show_text(item)
-                x += 120
+                x += 75
 
         y += 16
         x = 20
