@@ -126,6 +126,7 @@ def main(argv):
 
     if avrgs:
         non_solvent_residues = pdb.get_non_solvent_residues(pdb_file_unmutated)
+        # TODO: proper calculation of residue number spans (e.g. 1-30, 69-399, etc.)
         mask1 = str(non_solvent_residues[0]) + "-" + str(non_solvent_residues[-1])
         mask2 = "1-50000"
 
