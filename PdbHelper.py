@@ -9,7 +9,7 @@ def read_pdb_atoms(pdb_file, wat):
         for line in f:
             line = line.split()
             if 'ATOM' in line[0]:
-                if (line[3] == 'WAT') == wat:
+                if not ((line[3] == 'WAT') and wat):
                     a_number = line[1]
                     a_type = line[2]
                     res_type = line[3]
@@ -18,7 +18,6 @@ def read_pdb_atoms(pdb_file, wat):
                     y = line[6]
                     z = line[7]
                     out.append([a_number, a_type, res_type, res_number, x, y, z])
-
     return out
 
 
@@ -92,3 +91,9 @@ def convert_res_types(res_types):
             out.append(res_codes[item])
 
     return out
+
+
+def get_non_solvent_residues(pdb_file):
+    atoms = read_pdb_atoms(pdb_file, 1)
+    residues = get_all_residue_numbers(atoms)
+    print residues
