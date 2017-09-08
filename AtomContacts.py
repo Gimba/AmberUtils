@@ -191,7 +191,7 @@ def main(argv):
 
     # write output
     write_output(output, prmtop_muta.split('.')[0] + '_occupancies.dat')
-    output_to_pdf(output, prmtop_muta.split('.')[0] + '_occupancies.dat', avrgs)
+    output_to_pdf(output, prmtop_muta.split('.')[0] + '_occupancies.dat', avrgs, wat, hydro)
 
 
 def add_averages_column(lst, avrgs):
@@ -618,16 +618,6 @@ def prepare_output(output, avrgs):
             if last_res == "":
                 last_res = res
 
-            # add up values for the current residue
-            init_res += int(line[1])
-            muta_res += int(line[2])
-            sim_res += int(line[3])
-
-            if avrgs:
-                avg_init_res += float(line[4])
-                avg_muta_res += float(line[5])
-                avg_sim_res += float(line[6])
-
             # behavior if a new residue starts
             if last_res != res:
                 last_res = res
@@ -657,6 +647,17 @@ def prepare_output(output, avrgs):
                     avg_init_res = float(line[4])
                     avg_muta_res = float(line[5])
                     avg_sim_res = float(line[6])
+            else:
+                # add up values for the current residue
+                init_res += int(line[1])
+                muta_res += int(line[2])
+                sim_res += int(line[3])
+
+                if avrgs:
+                    avg_init_res += float(line[4])
+                    avg_muta_res += float(line[5])
+                    avg_sim_res += float(line[6])
+
         out += l + "\n"
 
     # handling of last residue
@@ -726,7 +727,7 @@ def add_residue_types(output, types):
     return '\n'.join(out)
 
 
-def output_to_pdf(output, file_name, avrgs):
+def output_to_pdf(output, file_name, avrgs, wat, hydro):
     file_name = file_name.split('_')[0]
     f = file_name + '0_occupancies.pdf'
     surface = cairo.PDFSurface(f, 595, 842)
@@ -736,7 +737,15 @@ def output_to_pdf(output, file_name, avrgs):
     ctx.set_font_size(20)
     ctx.set_source_rgb(0, 0, 0)
     ctx.move_to(20, 30)
-    ctx.show_text(file_name)
+    title = file_name
+
+    if hydro:
+        title += " - hydrogen stripped"
+
+    if wat:
+        title += " - water stripped"
+
+    ctx.show_text(title)
 
     x = 20
     y = 60
