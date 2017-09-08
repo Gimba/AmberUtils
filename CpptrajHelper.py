@@ -37,7 +37,12 @@ def run_cpptraj(prmtop, trajin, cpptraj_file):
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
 # F2196A_contacts.cpptraj). Water, Chlor and hydrogen stripped
 def create_contact_cpptraj(trajin, mask1, mask2, wat, hydro):
-    cpptraj_file = trajin.split('.')[0].strip("\"") + "_" + trajin.split('.')[1].split()[0] + "_contacts.cpptraj"
+    t = trajin.split()
+    frames = ""
+    if len(t) > 1:
+        frames = "_" + t[1] + "_" + t[2]
+        frames = frames.strip("\"")
+    cpptraj_file = t[0].split('.')[0].strip("\"") + "_" + t[0].split('.')[1] + frames + "_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
     with open(cpptraj_file, 'w') as f:

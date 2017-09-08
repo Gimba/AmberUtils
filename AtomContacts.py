@@ -155,8 +155,9 @@ def main(argv):
             # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran selecting
             # frames
             trajin = "\"" + item[1] + " " + item[2] + " " + item[3] + "\""
-            occ_sim = get_occupancy_of_atoms(item[0], trajin, atoms, wat, hydro)
-
+            occs.append(get_occupancy_of_atoms(item[0], trajin, atoms, wat, hydro))
+    print occs
+    exit()
     ##### reformat data #####
 
     occ_list = lst.c_bind(occ_init, occ_muta)
