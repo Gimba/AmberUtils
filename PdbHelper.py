@@ -96,4 +96,4 @@ def convert_res_types(res_types):
 def get_non_solvent_residues(pdb_file):
     atoms = read_pdb_atoms(pdb_file, 1)
     residues = get_all_residue_numbers(atoms)
-    print residues
+    return residues
