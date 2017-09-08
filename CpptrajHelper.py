@@ -36,7 +36,7 @@ def run_cpptraj(prmtop, trajin, cpptraj_file):
 # e.g. nativecontacts :47@C :1-5000 writecontacts F2196A_contacts.dat distance 3.9). The name fo the file is the
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
 # F2196A_contacts.cpptraj). Water, Chlor and hydrogen stripped
-def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
+def create_contact_cpptraj(trajin, mask1, mask2, wat, hydro):
     cpptraj_file = trajin.split('.')[0].strip("\"") + "_" + trajin.split('.')[1].split()[0] + "_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
@@ -46,8 +46,9 @@ def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
         if hydro:
             f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
 
-        for item1 in res1:
-            for item2 in res2:
+        for item1 in mask1:
+            # TODO: needs proper handling of a list of masks
+            for item2 in mask2:
                 f.write('nativecontacts :' + item1 + ' :' + item2 + ' writecontacts ' +
                     out_file + ' distance 3.9\n')
         f.write('go')
