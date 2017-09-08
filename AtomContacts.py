@@ -129,7 +129,9 @@ def main(argv):
 
         avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, atom_types, wat, hydro)
 
-        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_sim, atom_types, wat, hydro)
+        trajin_frames = "\"" + trajin_sim + frames + "\""
+        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_frames, atom_types, wat, hydro,
+                                                 non_solvent_residues)
 
     ##### get occupancy of atoms in contact with the mutation #####
 
