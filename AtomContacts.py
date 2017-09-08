@@ -125,12 +125,16 @@ def main(argv):
     atom_types = get_atom_types(atoms)
 
     if avrgs:
-        avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, atom_types, wat, hydro)
+        non_solvent_residues = pdb.get_non_solvent_residues(pdb_file_unmutated)
+        mask1 = str(non_solvent_residues[0]) + "-" + str(non_solvent_residues[-1])
+        mask2 = "1-50000"
 
-        avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, atom_types, wat, hydro)
+        avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, atom_types, mask1, mask2, wat, hydro)
+
+        avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, atom_types, mask1, mask2, wat, hydro)
 
         trajin_frames = "\"" + trajin_sim + frames + "\""
-        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_frames, atom_types, wat, hydro)
+        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_frames, atom_types, mask1, mask2, wat, hydro)
 
     ##### get occupancy of atoms in contact with the mutation #####
 
@@ -218,11 +222,11 @@ def get_contacting_atoms(prmtop, trajin, residue, wat, hydro):
 
 
 # returns the averages for all types of atoms in a given prmtop file and trajectory
-def get_contact_averages_of_types(prmtop, trajin, types, wat, hydro):
+def get_contact_averages_of_types(prmtop, trajin, types, mask1, mask2, wat, hydro):
     # pdb_file = cpp.generate_pdb(prmtop, trajin, wat, hydro)
     # atom_list = pdb.read_pdb_atoms(pdb_file, wat)
     # residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
-    model_contacts_mutated = cpp.create_contact_cpptraj_types(trajin, types, wat, hydro)
+    model_contacts_mutated = cpp.create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_contacts_mutated[0])
     avrgs = get_occupancy_averages_of_types(model_contacts_mutated[1], types)
     return avrgs
