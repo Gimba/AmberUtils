@@ -67,8 +67,6 @@ def create_contact_cpptraj_types(trajin, types, wat, hydro):
             f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
 
         for item in types:
-            if item == "O":
-                f.write('strip :WAT\n')
             f.write('nativecontacts :*' + item + ' writecontacts ' +
                     out_file + ' distance 3.9\n')
         f.write('go')
