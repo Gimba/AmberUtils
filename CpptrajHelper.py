@@ -27,9 +27,9 @@ def run_cpptraj(prmtop, trajin, cpptraj_file):
     start = timeit.default_timer()
     os.system(cpptraj)
     stop = timeit.default_timer()
-    elapsed = str(round(stop - start))
-    minutes = str(round(elapsed / 60))
-    seconds = str(round(elapsed % 60))
+    elapsed = round(stop - start)
+    minutes = str(int(elapsed / 60))
+    seconds = str(int(elapsed % 60))
     print minutes + " minutes " + seconds + " seconds"
 
 # creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
