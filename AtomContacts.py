@@ -41,6 +41,7 @@ def main(argv):
     parser.add_argument('trajin_mutated_init', help='trajectory for mutated structure')
     parser.add_argument('trajin_mutated_simulation', help='trajectory for mutated structure after simulation')
     parser.add_argument('-f', '--frames', nargs='?', help='select frames')
+    parser.add_argument('-m', '--models', nargs='?', help='list of inputs (e.g. model1.prmtop model1.incprd ...')
     parser.add_argument('mutation', help='mutated structure')
     parser.add_argument('-a', '--avrgs', help='calculate averages', action='store_true')
     parser.add_argument('-w', '--wat', help='strip water', action='store_true')
@@ -49,6 +50,10 @@ def main(argv):
     # parser.add_argument('wat', nargs='?', help='strip water, default yes')
     # parser.add_argument('hydro', nargs='?', help='strip hydrogen, default yes')
     args = parser.parse_args()
+
+    input_list = args.models
+    input_list = parse_input_list(input_list)
+    exit()
 
     mutation = args.mutation
 
@@ -825,6 +830,24 @@ def output_to_pdf(output, file_name, avrgs, wat, hydro):
         merger.append(f, 'rb')
     merger.write(file_name + '_occupancies.pdf')
 
+
+# return list of list of inputs
+def parse_input_list(input_list):
+    out = []
+    input_list = input_list.split()
+    temp = []
+    for item in input_list:
+        if "prmtop" in item:
+            out.append(temp)
+            temp = []
+            temp.append(item)
+        elif "inpcrd" in item or "nc" in item:
+            temp.append(item)
+        elif item.isdigit():
+            temp.append(item)
+    out.remove(out[0])
+    out.append(temp)
+    print out
 
 if __name__ == "__main__":
     main(sys.argv)
