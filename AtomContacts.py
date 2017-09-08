@@ -130,8 +130,7 @@ def main(argv):
         avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, atom_types, wat, hydro)
 
         trajin_frames = "\"" + trajin_sim + frames + "\""
-        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_frames, atom_types, wat, hydro,
-                                                 non_solvent_residues)
+        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_frames, atom_types, wat, hydro)
 
     ##### get occupancy of atoms in contact with the mutation #####
 
@@ -202,7 +201,7 @@ def add_averages_column(lst, avrgs):
 
 
 def get_occupancy_of_atoms(prmtop, trajin, atoms, wat, hydro):
-    model_atom_occupancy = cpp.create_contact_cpptraj(trajin, atoms, ['1-5000'], wat, hydro)
+    model_atom_occupancy = cpp.create_contact_cpptraj(trajin, atoms, ['1-500000'], wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_atom_occupancy[0])
     contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
     occupancy = get_atom_occupancy(contacts_init)
@@ -211,7 +210,7 @@ def get_occupancy_of_atoms(prmtop, trajin, atoms, wat, hydro):
 
 # get atoms in contact with specified residue
 def get_contacting_atoms(prmtop, trajin, residue, wat, hydro):
-    model_contacts = cpp.create_contact_cpptraj(trajin, [residue], ['1-5000'], wat, hydro)
+    model_contacts = cpp.create_contact_cpptraj(trajin, [residue], ['1-500000'], wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_contacts[0])
     contact_atoms_init = get_atom_contacts(model_contacts[1], residue)
     atoms = extract_atoms(contact_atoms_init)
