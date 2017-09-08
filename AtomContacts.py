@@ -145,21 +145,18 @@ def main(argv):
         avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_frames, atom_types, mask1, mask2, wat, hydro)
 
     ##### get occupancy of atoms in contact with the mutation #####
+    occs = []
+    for item in input_list:
+        if len(item) < 3:
+            # get occupancy of atoms contacting mutation residue
+            occs.append(get_occupancy_of_atoms(item[0], item[1], atoms, wat, hydro))
 
-    # get occupancy of atoms contacting mutation residue
-    occ_init = get_occupancy_of_atoms(prmtop_init, trajin_init, atoms, wat, hydro)
+        else:
+            # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran selecting
+            # frames
+            trajin = "\"" + item[1] + " " + item[2] + " " + item[3] + "\""
+            occ_sim = get_occupancy_of_atoms(item[0], trajin, atoms, wat, hydro)
 
-    # get occupancy of atoms contating mutation residue after mutation
-    occ_muta = get_occupancy_of_atoms(prmtop_muta, trajin_muta, atoms, wat, hydro)
-
-    # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran
-
-    if frames:
-        trajin_frames = "\"" + trajin_sim + frames + "\""
-        print trajin_frames
-        occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_frames, atoms, wat, hydro)
-    else:
-        occ_sim = get_occupancy_of_atoms(prmtop_muta, trajin_sim, atoms, wat, hydro)
     ##### reformat data #####
 
     occ_list = lst.c_bind(occ_init, occ_muta)
