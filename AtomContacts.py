@@ -53,13 +53,15 @@ def main(argv):
 
     input_list = args.models
     input_list = parse_input_list(input_list)
-    exit()
 
     mutation = args.mutation
 
     prmtop_init = args.pdb_unmutated
     unmutated_name = prmtop_init.split('.')[0]
     trajin_init = args.trajin_unmutated
+
+    prmtop_init = input_list[0][0]
+    trajin_init = input_list[0][1]
 
     prmtop_muta = args.pdb_mutated
     mutated_name = prmtop_muta.split('.')[0]
@@ -847,7 +849,7 @@ def parse_input_list(input_list):
             temp.append(item)
     out.remove(out[0])
     out.append(temp)
-    print out
+    return out
 
 if __name__ == "__main__":
     main(sys.argv)
