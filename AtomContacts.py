@@ -35,20 +35,11 @@ __docformat__ = "restructuredtext en"
 
 def main(argv):
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('pdb_unmutated', help='unmutated structure')
-    parser.add_argument('trajin_unmutated', help='trajectory for unmutated structure')
-    parser.add_argument('pdb_mutated', help='mutated structure')
-    parser.add_argument('trajin_mutated_init', help='trajectory for mutated structure')
-    parser.add_argument('trajin_mutated_simulation', help='trajectory for mutated structure after simulation')
-    parser.add_argument('-f', '--frames', nargs='?', help='select frames')
-    parser.add_argument('-m', '--models', nargs='?', help='list of inputs (e.g. model1.prmtop model1.incprd ...')
     parser.add_argument('mutation', help='mutated structure')
+    parser.add_argument('-m', '--models', nargs='?', help='list of inputs (e.g. model1.prmtop model1.incprd ...')
     parser.add_argument('-a', '--avrgs', help='calculate averages', action='store_true')
     parser.add_argument('-w', '--wat', help='strip water', action='store_true')
     parser.add_argument('-hy', '--hydro', help='strip hydrogen', action='store_true')
-    # parser.add_argument('avrgs', nargs='?', help='if 1, averages will be calculated, default no')
-    # parser.add_argument('wat', nargs='?', help='strip water, default yes')
-    # parser.add_argument('hydro', nargs='?', help='strip hydrogen, default yes')
     args = parser.parse_args()
 
     input_list = args.models
@@ -56,29 +47,13 @@ def main(argv):
 
     mutation = args.mutation
 
-    prmtop_init = args.pdb_unmutated
-    unmutated_name = prmtop_init.split('.')[0]
-    trajin_init = args.trajin_unmutated
-
-    prmtop_init = input_list[0][0]
-    trajin_init = input_list[0][1]
-
-    prmtop_muta = args.pdb_mutated
-    mutated_name = prmtop_muta.split('.')[0]
-    trajin_muta = args.trajin_mutated_init
-    trajin_sim = args.trajin_mutated_simulation
-
     avrgs = 0
     wat = 0
     hydro = 0
-    frames = 0
+
     if args.avrgs:
         avrgs = args.avrgs
     print "calculate averages " + str(bool(avrgs))
-
-    if args.frames:
-        frames = args.frames
-        print "selected frames" + frames
 
     if args.wat:
         wat = args.wat
@@ -88,26 +63,22 @@ def main(argv):
         hydro = args.hydro
     print "strip hydrogen " + str(bool(hydro))
 
-    results_folder = 'contacts/'
+    results_folder = 'occupancies/'
 
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    os.system("cp " + prmtop_init + " " + results_folder)
-    os.system("cp " + prmtop_muta + " " + results_folder)
-    os.system("cp " + trajin_init + " " + results_folder)
-    os.system("cp " + trajin_muta + " " + results_folder)
-    os.system("cp " + trajin_sim + " " + results_folder)
+    for item in input_list:
+        os.system("cp " + item[0] + " " + results_folder)
+        os.system("cp " + item[1] + " " + results_folder)
+
     os.chdir(os.getcwd() + '/' + results_folder)
 
     ##### get occupancy averages of types #####
 
     # get a list of all atoms of all residues
-    pdb_file_unmutated = cpp.generate_pdb(prmtop_init, trajin_init, wat, hydro)
-    atom_list_unmutated = pdb.read_pdb_atoms(pdb_file_unmutated, wat)
-
-    # get a list of types present in a atom list
-    # types = pdb.get_all_atom_types(atom_list_unmutated)
+    pdb_file_unmutated = cpp.generate_pdb(input_list[0][0], input_list[0][1], wat, hydro)
+    atom_list_unmutated = pdb.read_pdb_atoms(input_list[0][0], wat)
 
     # get a list of all residues with residue numbers
     residues = pdb.get_all_residues(atom_list_unmutated)
@@ -125,58 +96,60 @@ def main(argv):
     residues = lst.c_del(residues, 0)
     residues = lst.c_bind(types, residues)
 
-    # get mutation contacts
-    atoms = get_contacting_atoms(prmtop_init, trajin_init, mutation, wat, hydro)
+    # atoms in contact with the to-be substituted residue (contacting atoms)
+    atoms = get_contacting_atoms(input_list[0][0], input_list[0][1], mutation, wat, hydro)
 
     # get types of contacting atoms
     atom_types = get_atom_types(atoms)
 
-    if avrgs:
-        non_solvent_residues = pdb.get_non_solvent_residues(pdb_file_unmutated)
-        # TODO: proper calculation of residue number spans (e.g. 1-30, 69-399, etc.)
-        mask1 = str(non_solvent_residues[0]) + "-" + str(non_solvent_residues[-1])
-        mask2 = "1-50000"
+    # get non solvent residues for quicker computation, since otherwise contacts between solvent molecules would be
+    # calculated as well
+    non_solvent_residues = pdb.get_non_solvent_residues(pdb_file_unmutated)
+    # TODO: proper calculation of residue number spans (e.g. 1-30, 69-399, etc.)
+    mask1 = str(non_solvent_residues[0]) + "-" + str(non_solvent_residues[-1])
 
-        avrg_init = get_contact_averages_of_types(prmtop_init, trajin_init, atom_types, mask1, mask2, wat, hydro)
-
-        avrg_muta = get_contact_averages_of_types(prmtop_muta, trajin_muta, atom_types, mask1, mask2, wat, hydro)
-
-        trajin_frames = "\"" + trajin_sim + frames + "\""
-        avrg_sim = get_contact_averages_of_types(prmtop_muta, trajin_frames, atom_types, mask1, mask2, wat, hydro)
+    # mask2 set to an arbitrary high value to include all possible contacts
+    mask2 = "1-50000"
 
     ##### get occupancy of atoms in contact with the mutation #####
     occs = []
+    averages = []
     for item in input_list:
         if len(item) < 3:
             # get occupancy of atoms contacting mutation residue
             occs.append(get_occupancy_of_atoms(item[0], item[1], atoms, wat, hydro))
+            if avrgs:
+                averages.append(get_contact_averages_of_types(item[0], item[1], atom_types, mask1, mask2, wat, hydro))
 
         else:
             # get occupancy of atoms contacting mutation residue after its mutation and after simulation ran selecting
             # frames
             trajin = "\"" + item[1] + " " + item[2] + " " + item[3] + "\""
             occs.append(get_occupancy_of_atoms(item[0], trajin, atoms, wat, hydro))
-    print occs
-    exit()
-    ##### reformat data #####
 
-    occ_list = lst.c_bind(occ_init, occ_muta)
-    occ_list = lst.c_bind(occ_list, occ_sim)
-    occ_list = lst.c_del(occ_list, 2)
-    occ_list = lst.c_del(occ_list, 3)
+            if avrgs:
+                trajin = "\"" + item[1] + " " + item[2] + " " + item[3] + "\""
+                averages.append(get_contact_averages_of_types(item[0], trajin, atom_types, mask1, mask2, wat, hydro))
+
+    ##### reformat data #####
+    # create list with residue, atom identifier and occupancies
+    occ_list = []
+    for item in occs:
+        if not occ_list:
+            occ_list = lst.c_get(item, 0)
+        occ_list = lst.c_bind(occ_list, lst.c_get(item, 1))
 
     res_numb = convert_res_numbers(lst.c_get(occ_list, 0))
     occ_list = lst.c_del(occ_list, 0)
     occ_list = lst.c_bind(res_numb, occ_list)
 
     if avrgs:
-        occ_list = add_averages_column(occ_list, avrg_init)
-        occ_list = add_averages_column(occ_list, avrg_muta)
-        occ_list = add_averages_column(occ_list, avrg_sim)
+        for item in averages:
+            occ_list = add_averages_column(occ_list, item)
 
-    occ_list = [(x[0], x) for x in occ_list]
-    occ_list.sort()
-    occ_list = [x[1] for x in occ_list]
+    print occ_list
+
+
 
     top_header = ["", "", "Occupancies", ""]
     if avrgs:
@@ -195,8 +168,8 @@ def main(argv):
     output = add_residue_types(output, residues)
 
     # write output
-    write_output(output, prmtop_muta.split('.')[0] + '_occupancies.dat')
-    output_to_pdf(output, prmtop_muta.split('.')[0] + '_occupancies.dat', avrgs, wat, hydro)
+    write_output(output, input_list[0][0].split('.')[0] + '_occupancies.dat')
+    output_to_pdf(output, input_list[0][0].split('.')[0] + '_occupancies.dat', avrgs, wat, hydro)
 
 
 def add_averages_column(lst, avrgs):
@@ -214,7 +187,16 @@ def get_occupancy_of_atoms(prmtop, trajin, atoms, wat, hydro):
     model_atom_occupancy = cpp.create_contact_cpptraj(trajin, atoms, ['1-500000'], wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_atom_occupancy[0])
     contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
-    occupancy = get_atom_occupancy(contacts_init)
+
+    # calculate number of frames if range is specified in trajectory
+    frames = 1
+    trajin = trajin.replace("\"", "")
+    trajin = trajin.split()
+    if len(trajin) > 1:
+        frames = int(trajin[2]) - int(trajin[1])
+
+    occupancy = get_atom_occupancy(contacts_init, frames)
+
     return occupancy
 
 
@@ -229,16 +211,10 @@ def get_contacting_atoms(prmtop, trajin, residue, wat, hydro):
 
 # returns the averages for all types of atoms in a given prmtop file and trajectory
 def get_contact_averages_of_types(prmtop, trajin, types, mask1, mask2, wat, hydro):
-    # pdb_file = cpp.generate_pdb(prmtop, trajin, wat, hydro)
-    # atom_list = pdb.read_pdb_atoms(pdb_file, wat)
-    # residue_atom_list = cpp.create_all_atom_residue_list(atom_list, types)
     model_contacts_mutated = cpp.create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro)
     cpp.run_cpptraj(prmtop, trajin, model_contacts_mutated[0])
     avrgs = get_occupancy_averages_of_types(model_contacts_mutated[1], types)
     return avrgs
-
-
-
 
 
 # calculates the average of contacts of types in the given data
@@ -254,7 +230,7 @@ def get_occupancy_averages_of_types(data_file, types):
                 residue_types.append(line[0][0])
         if len(residue_types) != 0:
             type_occupancies = Counter(residue_types).values()
-            average = sum(type_occupancies) / float(len(type_occupancies))
+            average = round(sum(type_occupancies) / float(len(type_occupancies)), 2)
             type_occupancy_average.append([item, average])
 
     return type_occupancy_average
@@ -390,25 +366,21 @@ def get_interesting_atoms(init, muta, sim):
     return interesting
 
 
-def get_atom_occupancy(occupancy_atoms):
+def get_atom_occupancy(occupancy_atoms, frames):
     # occupancy_atoms = [item[0].split('_')[0] for item in occupancy_atoms]
-    counter = 0
+    counter = 0.0
     last_atom = ""
     out = []
     for item in occupancy_atoms:
         atom = item[0].split('_')[0]
-        contacts = int(item[1])
+        contacts = float(item[1])
         if last_atom == "":
             last_atom = atom
         if last_atom == atom:
             counter += contacts
         else:
-            # TODO: solve this quick fix
-            if counter > 100:
-                counter = counter / 100
-
-            out.append([atom, counter])
-            counter = 0
+            out.append([atom, counter / frames])
+            counter = 0.0
             last_atom = atom
 
     # out = Counter(occupancy_atoms)
@@ -418,6 +390,7 @@ def get_atom_occupancy(occupancy_atoms):
     return out
 
 
+# transform cpptraj writecontacts data file into list
 def get_atom_contacts(data_file, residue):
     contact_atoms = []
     with open(data_file, 'r') as f:
@@ -610,9 +583,9 @@ def prepare_output(output, avrgs):
         l = line
         if line[0] == ':':
             line = line.split(',')
-            init_tot += int(line[1])
-            muta_tot += int(line[2])
-            sim_tot += int(line[3])
+            init_tot += float(line[1])
+            muta_tot += float(line[2])
+            sim_tot += float(line[3])
 
             if avrgs:
                 avg_init_tot += float(line[4])
@@ -637,7 +610,7 @@ def prepare_output(output, avrgs):
                 muta_res_per = (init_res - muta_res) * 100 / init_res
                 sim_res_per = (init_res - sim_res) * 100 / init_res
 
-                out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%"
+                out += ",," + str(round(muta_res_per, 2)) + "%," + str(round(sim_res_per, 2)) + "%"
                 if avrgs:
                     avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
                     avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
@@ -645,18 +618,18 @@ def prepare_output(output, avrgs):
                 out += "\n\n"
 
                 # reset values for summing up residue contacts to start from first values of new residue
-                init_res = int(line[1])
-                muta_res = int(line[2])
-                sim_res = int(line[3])
+                init_res = float(line[1])
+                muta_res = float(line[2])
+                sim_res = float(line[3])
                 if avrgs:
                     avg_init_res = float(line[4])
                     avg_muta_res = float(line[5])
                     avg_sim_res = float(line[6])
             else:
                 # add up values for the current residue
-                init_res += int(line[1])
-                muta_res += int(line[2])
-                sim_res += int(line[3])
+                init_res += float(line[1])
+                muta_res += float(line[2])
+                sim_res += float(line[3])
 
                 if avrgs:
                     avg_init_res += float(line[4])
@@ -674,7 +647,7 @@ def prepare_output(output, avrgs):
     # add line with percentage values
     muta_res_per = (init_res - muta_res) * 100 / init_res
     sim_res_per = (init_res - sim_res) * 100 / init_res
-    out += ",," + str(muta_res_per) + "%," + str(sim_res_per) + "%"
+    out += ",," + str(round(muta_res_per, 2)) + "%," + str(round(sim_res_per, 2)) + "%"
     if avrgs:
         avg_muta_res_per = (avg_init_res - avg_muta_res) * 100 / avg_init_res
         avg_sim_res_per = (avg_init_res - avg_sim_res) * 100 / avg_init_res
@@ -774,9 +747,9 @@ def output_to_pdf(output, file_name, avrgs, wat, hydro):
             x += 75
             ctx.set_source_rgb(0, 0, 0)
 
-            if int(line[1]) > int(line[2]):
+            if float(line[1]) > float(line[2]):
                 ctx.set_source_rgb(0.9, 0, 0)
-            if int(line[1]) < int(line[2]):
+            if float(line[1]) < float(line[2]):
                 ctx.set_source_rgb(0, 0.7, 0)
             ctx.move_to(x, y)
             ctx.show_text(line[2])
