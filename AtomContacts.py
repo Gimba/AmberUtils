@@ -149,8 +149,6 @@ def main(argv):
 
     print occ_list
 
-
-
     top_header = ["", "", "Occupancies", ""]
     if avrgs:
         top_header.extend(["", "Averages", "", ""])
@@ -235,10 +233,11 @@ def get_occupancy_averages_of_types(data_file, types):
 
     return type_occupancy_average
 
+
 def output_quantify(init_muta, init_sim, totals):
     output = ""
     counter = -1
-    header = ["lost far", "gained far","lost middle", "gained middle", "lost close", "gained close"]
+    header = ["lost far", "gained far", "lost middle", "gained middle", "lost close", "gained close"]
     for item in init_sim:
         counter += 1
         head_line = header[counter] + " values: init -> muta \n"
@@ -247,26 +246,11 @@ def output_quantify(init_muta, init_sim, totals):
             output += contact[0] + " " + str(contact[1]) + "\n"
         output += header[counter] + " contacts: " + str(len(item)) + "\n\n"
 
-    total = 0
-    totalo = []
-
-    # for item1 in totals[0]:
-    #     for item2 in totals[1]:
-    #         if item1[0] == item2[0]:
-    #             print str(item1[1] - item2[1])
-
-    # for list in totals:
-    #     for item in list:
-    #         total += item[1]
-    #     totalo.append(total)
-    #     total = 0
-    # print totalo
-    # exit()
     return output
+
 
 # returns amount of distance change
 def quantify_distances(contacts_data):
-
     distances = []
 
     with open(contacts_data, 'r') as f:
@@ -287,6 +271,7 @@ def quantify_distances(contacts_data):
                 else:
                     count = count + float(dist)
     return distances
+
 
 # return amount fo distance lost in each distance category
 def quantify_distances_of_contacts(data1, data2):
@@ -360,8 +345,8 @@ def trendify_distances():
 
 
 def get_interesting_atoms(init, muta, sim):
-    init_muta = list(set(init)^set(muta))
-    init_sim = list(set(init)^set(sim))
+    init_muta = list(set(init) ^ set(muta))
+    init_sim = list(set(init) ^ set(sim))
     interesting = list(set(init_muta + init_sim))
     return interesting
 
@@ -448,7 +433,6 @@ def extract_residues(contact_atoms):
 
 
 def create_contact_cpptraj(trajin, res1, res2):
-
     cpptraj_file = trajin.split('.')[0] + "_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
@@ -457,7 +441,7 @@ def create_contact_cpptraj(trajin, res1, res2):
         for item1 in res1:
             for item2 in res2:
                 f.write('nativecontacts :' + item1 + ' :' + item2 + ' writecontacts ' +
-                    out_file + ' distance 3.9\n')
+                        out_file + ' distance 3.9\n')
         f.write('go')
 
     return [cpptraj_file, out_file]
@@ -529,7 +513,6 @@ def write_results(trajin, init, muta, prod, all_interesting):
         output = output + "\n"
     output = output + "total:, "
     output = output + str(init_total) + ", " + str(muta_total) + ", " + str(prod_total) + "\n"
-
 
     outfile_name = model + "_" + mutant + "_results.dat"
 
@@ -821,6 +804,7 @@ def parse_input_list(input_list):
     out.remove(out[0])
     out.append(temp)
     return out
+
 
 if __name__ == "__main__":
     main(sys.argv)

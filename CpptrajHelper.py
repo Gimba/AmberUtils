@@ -32,6 +32,7 @@ def run_cpptraj(prmtop, trajin, cpptraj_file):
     seconds = str(int(elapsed % 60))
     print minutes + " minutes " + seconds + " seconds"
 
+
 # creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
 # e.g. nativecontacts :47@C :1-5000 writecontacts F2196A_contacts.dat distance 3.9). The name fo the file is the
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
@@ -83,6 +84,7 @@ def create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro):
         f.write('go')
 
     return [cpptraj_file, out_file]
+
 
 # creates a cpptraj file to generate a pdb from the given inputs. Returns name of cpptraj file and name of pdb file.
 # Water, Chlor and hydrogen stripped
