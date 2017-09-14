@@ -21,21 +21,17 @@ def c_bind(list1, list2):
     outlist = []
     if len(list1) == len(list2):
         for i in range(0, len(list1)):
-            if isinstance(list1[i], str):
+            if not isinstance(list1[i], list):
                 temp1 = [list1[i]]
-            elif isinstance(list1[i], tuple):
-                temp1 = list(list1[i])
             else:
                 temp1 = list1[i]
 
-            if isinstance(list2[i], str):
+            if not isinstance(list2[i], list):
                 temp2 = [list2[i]]
-            elif isinstance(list2[i], tuple):
-                temp2 = list(list2[i])
             else:
                 temp2 = list2[i]
-            temp1.extend(temp2)
 
+            temp1.extend(temp2)
             outlist.append(temp1)
     else:
         print "fail: lists have different lengths"
