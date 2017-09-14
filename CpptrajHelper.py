@@ -63,7 +63,12 @@ def create_contact_cpptraj(trajin, mask1, mask2, wat, hydro):
 
 # get contacts for atom types
 def create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro):
-    cpptraj_file = trajin.split('.')[0].strip("\"") + "_" + trajin.split('.')[1].split()[0] + "_contacts_types.cpptraj"
+    t = trajin.split()
+    frames = ""
+    if len(t) > 1:
+        frames = "_" + t[1] + "_" + t[2]
+        frames = frames.strip("\"")
+    cpptraj_file = t[0].split('.')[0].strip("\"") + "_" + t[0].split('.')[1] + frames + "_averages_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
     with open(cpptraj_file, 'w') as f:
