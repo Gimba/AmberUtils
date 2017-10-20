@@ -35,21 +35,22 @@ __docformat__ = "restructuredtext en"
 #        (e.g. 'g', 'green', '#00FFFF')
 
 
-import cairo
-import math
-import csv
-import matplotlib.colors as mc
-import sys
 import argparse
+import csv
+import math
+import sys
+
+import cairo
+import matplotlib.colors as mc
 from PIL import Image
 
 # Dimensions in pixels - can be altered at will, but the underlying software library does impose some limits on maximum sizes.
 
 WIDTH, HEIGHT = 1500,3000
 
-RES_RADIUS = 40
+RES_RADIUS = 60
 COL_SPACING = 400
-RES_Y_SPACING = 50
+RES_Y_SPACING = 80
 MARGIN = 100
 FONT_SIZE = 24
 DASH_SIZE = 10
@@ -257,7 +258,7 @@ def plot_interactions(col_ids, cols, ctx, energies, hbonds, surface, negatives):
         for res in cols[col_id]:
             if 'Gap' not in res['Id']:
                 legend = res['Legend'].replace('+', '')
-                draw_residue(ctx, x, y, legend, res['Fill'])
+                draw_residue(ctx, x, y, legend, res['Fill'], res['Chain'])
             locations[res['Id']] = (x, y)
             y += RES_Y_SPACING
 
@@ -348,7 +349,7 @@ def read_control_file(control, col_ids, cols, residue_ids):
             residue_ids.append(row['Id'])
 
 
-def draw_residue(ctx, x, y, text, colour):
+def draw_residue(ctx, x, y, text, colour, chain):
     ctx.set_source_rgb (*colour_residue(text, colour))
     ctx.save()
     ctx.translate(x, y)
@@ -358,10 +359,10 @@ def draw_residue(ctx, x, y, text, colour):
     ctx.restore()
     ctx.fill()
     ctx.set_source_rgb (0, 0, 0)
-    (x_bearing, y_bearing, add_width, height, x_advance, y_advance) = ctx.text_extents("I")
+    (x_bearing, y_bearing, add_width, height, x_advance, y_advance) = ctx.text_extents("W")
     (x_bearing, y_bearing, width, height, x_advance, y_advance) = ctx.text_extents(text)
     ctx.move_to(x-(width+add_width)/2, y+height/2)
-    ctx.show_text(text)
+    ctx.show_text(chain + ':' + text)
     #ctx.rectangle(x-width/2-2, y-height/2-2, width+4, height+4)
     ctx.stroke()
  
