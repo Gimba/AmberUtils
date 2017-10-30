@@ -1,0 +1,47 @@
+#!/bin/bash
+
+cd ..
+
+infile=${PWD##*/}
+
+path=${PWD}
+
+# pmemd -O -i sim_config/min_1.in -o productions/min_1.out -p $infile.prmtop -c $infile.inpcrd -r productions/min_1.rst -inf productions/min_1.mdinfo
+
+# if [ -f productions/min_1.rst ]; then
+# 	echo " " | mailx -s "$HOST: $path $infile minimization finished" ucbtmc7@ucl.ac.uk
+# fi
+
+# pmemd.cuda -O -i sim_config/rel_1.in -o productions/rel_1.out -p $infile.prmtop -c productions/min_1.rst -r productions/rel_1.rst -x rel_1.nc -inf productions/rel_1.mdinfo -ref productions/min_1.rst
+
+# if [ -f productions/rel_1.rst ]; then
+# 	echo " " | mailx -s "$HOST: $path $infile relaxation 1 finished" ucbtmc7@ucl.ac.uk
+# fi
+
+# pmemd.cuda -O -i sim_config/rel_2.in -o productions/rel_2.out -p $infile.prmtop -c productions/rel_1.rst -r productions/rel_2.rst -x rel_2.nc -inf productions/rel_2.mdinfo -ref productions/rel_1.rst
+
+# if [ -f productions/rel_2.rst ]; then
+# 	echo " " | mailx -s "$HOST: $path $infile relaxation 2 finished" ucbtmc7@ucl.ac.uk
+# fi
+
+# pmemd.cuda -O -i sim_config/rel_3.in -o productions/rel_3.out -p $infile.prmtop -c productions/rel_2.rst -r productions/rel_3.rst -x rel_3.nc -inf productions/rel_3.mdinfo -ref productions/rel_2.rst
+
+# if [ -f productions/rel_3.rst ]; then
+# 	echo " " | mailx -s "$HOST: $path $infile relaxation 3 finished" ucbtmc7@ucl.ac.uk
+# fi
+
+cp productions/rel_3.rst productions/prod_0.rst
+
+for i in $(seq $1 $2)
+do
+	last=$((i-1))
+
+	pmemd.cuda -O -i sim_config/prod.in -p $infile.prmtop -c productions/prod_$last.rst -o productions/prod_$i.out -r productions/prod_$i.rst -x productions/prod_$i.nc -inf productions/prod_$i.info
+
+	if [ -f productions/prod_$i.rst ]; then
+		echo " " | mailx -s "$HOST: $path $infile production $i finished" ucbtmc7@ucl.ac.uk
+	fi
+	
+done
+
+cd -

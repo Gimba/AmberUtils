@@ -1,0 +1,8 @@
+#!/bin/bash
+
+folder=${PWD##*/}
+
+path=${PWD}
+
+echo cp $path/$1 $2/$folder/$3
+
