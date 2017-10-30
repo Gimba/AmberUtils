@@ -29,19 +29,17 @@ def main(argv):
                                                  'interactions energies between residues (DrawInteractions.pd). '
                                                  'Extracts interacting residues using hbonds_consol.csv and '
                                                  'FINAL_DECOMP_MMPBSA_table.csv.')
-    parser.add_argument('-b', '--hbond', help='path of hbonds_consol.csv file')
-    parser.add_argument('-f', '--fdmmpbsa', help='path of FINAL_DECOMP_MMPBSA_table.csv file')
-    parser.add_argument('-o', '--outfile', help='File name of interaction control file.')
-    parser.add_argument('-m', '--mapping', help='Mapping file for residue numbers and chains')
-    parser.add_argument('-c', '--column_order', nargs='?', help='Specify which chain gets which column. (e.g. \"CBA'
-                                                                '\" puts chain C residues in the frist, B in the second'
-                                                                'and A in the third column). If not set column order is'
-                                                                ' determined by the input files')
+    parser.add_argument('hbonds', help='hbonds_consol.csv')
+    parser.add_argument('fdmmpbsa', help='FINAL_DECOMP_MMPBSA_table.csv')
+    parser.add_argument('output', help='output file (CSV)')
+    parser.add_argument('-m', '--mapping', help='mapping file for residue numbers and chains')
+    parser.add_argument('-c', '--column_order', nargs='?', help='Assign chains to columns (e.g. \'-c CA\' -> C first, '
+                                                                'A second column)')
     args = parser.parse_args()
 
     entries = []
 
-    with open(args.hbond, 'r') as fo:
+    with open(args.hbonds, 'r') as fo:
         for line in fo:
             entries.append(line[0:7])
             entries.append(line[8:15])
@@ -73,12 +71,12 @@ def main(argv):
         resnum = re.findall(r'\d+', entry)[0]
         residue = mapping[resnum][0]
         chain = mapping[resnum][1]
-        column = str(column_order.index(chain))
+        column = str(column_order.index(chain) + 1)
         out_lines.append(column + "," + entry + "," + residue + "," + chain + ",Hydro")
 
     out_lines = sorted(out_lines)
 
-    with open(args.outfile, 'w') as out:
+    with open(args.output, 'w') as out:
         out.writelines("Col,Id,Legend,Chain,Fill" + '\n')
         for line in out_lines:
             out.writelines(line + '\n')

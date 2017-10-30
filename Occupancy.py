@@ -24,28 +24,23 @@ from collections import Counter
 import cairo
 from PyPDF2 import PdfFileMerger
 
-import CalcResNum1iqd
-import CpptrajHelper as cpp
-import ListHelper as lst
-import PdbHelper as pdb
-
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
 
 
 def main(argv):
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('mutation', help='mutated structure')
-    parser.add_argument('-m', '--models', nargs='?', help='list of inputs (e.g. model1.prmtop model1.incprd ...')
+    parser.add_argument('-r', '--residue', help='investigated residue')
+    parser.add_argument('-i', '--input', nargs='?', help='list of inputs (e.g. model1.prmtop model1.incprd, mutation.prmtop, prod_1.nc 1 20, ...')
     parser.add_argument('-a', '--avrgs', help='calculate averages', action='store_true')
     parser.add_argument('-w', '--wat', help='strip water', action='store_true')
     parser.add_argument('-hy', '--hydro', help='strip hydrogen', action='store_true')
     args = parser.parse_args()
 
-    input_list = args.models
+    input_list = args.input
     input_list = parse_input_list(input_list)
 
-    mutation = args.mutation
+    investigated_residue = args.residue
 
     avrgs = 0
     wat = 0
@@ -77,11 +72,11 @@ def main(argv):
     ##### get occupancy averages of types #####
 
     # get a list of all atoms of all residues
-    pdb_file_unmutated = cpp.generate_pdb(input_list[0][0], input_list[0][1], wat, hydro)
-    atom_list_unmutated = pdb.read_pdb_atoms(input_list[0][0], wat)
+    pdb_file_unmutated = generate_pdb(input_list[0][0], input_list[0][1], wat, hydro)
+    atom_list_unmutated = read_pdb_atoms(input_list[0][0], wat)
 
     # get a list of all residues with residue numbers
-    residues = pdb.get_all_residues(atom_list_unmutated)
+    residues = get_all_residues(atom_list_unmutated)
 
     # convert residue numbers
     temp = []
@@ -89,22 +84,22 @@ def main(argv):
         temp.append(item.split(','))
 
     residues = temp
-    res_numbers = convert_res_numbers(lst.c_get(residues, 1))
-    residues = lst.c_del(residues, 1)
-    residues = lst.c_bind(residues, res_numbers)
-    types = pdb.convert_res_types(lst.c_get(residues, 0))
-    residues = lst.c_del(residues, 0)
-    residues = lst.c_bind(types, residues)
+    res_numbers = c_get(residues, 1)
+    residues = c_del(residues, 1)
+    residues = c_bind(residues, res_numbers)
+    types = convert_res_types(c_get(residues, 0))
+    residues = c_del(residues, 0)
+    residues = c_bind(types, residues)
 
     # atoms in contact with the to-be substituted residue (contacting atoms)
-    atoms = get_contacting_atoms(input_list[0][0], input_list[0][1], mutation, wat, hydro)
+    atoms = get_contacting_atoms(input_list[0][0], input_list[0][1], investigated_residue, wat, hydro)
 
     # get types of contacting atoms
     atom_types = get_atom_types(atoms)
 
     # get non solvent residues for quicker computation, since otherwise contacts between solvent molecules would be
     # calculated as well
-    non_solvent_residues = pdb.get_non_solvent_residues(pdb_file_unmutated)
+    non_solvent_residues = get_non_solvent_residues(pdb_file_unmutated)
     # TODO: proper calculation of residue number spans (e.g. 1-30, 69-399, etc.)
     mask1 = str(non_solvent_residues[0]) + "-" + str(non_solvent_residues[-1])
 
@@ -136,18 +131,16 @@ def main(argv):
     occ_list = []
     for item in occs:
         if not occ_list:
-            occ_list = lst.c_get(item, 0)
-        occ_list = lst.c_bind(occ_list, lst.c_get(item, 1))
+            occ_list = c_get(item, 0)
+        occ_list = c_bind(occ_list, c_get(item, 1))
 
-    res_numb = convert_res_numbers(lst.c_get(occ_list, 0))
-    occ_list = lst.c_del(occ_list, 0)
-    occ_list = lst.c_bind(res_numb, occ_list)
+    res_numb = c_get(occ_list, 0)
+    occ_list = c_del(occ_list, 0)
+    occ_list = c_bind(res_numb, occ_list)
 
     if avrgs:
         for item in averages:
             occ_list = add_averages_column(occ_list, item)
-
-    print occ_list
 
     occ_list = sorted(occ_list)
 
@@ -163,13 +156,13 @@ def main(argv):
     occ_list = [top_header] + occ_list
 
     # format output
-    output = lst.output_2D_list(occ_list)
+    output = output_2D_list(occ_list)
     output = prepare_output(output, avrgs)
     output = add_residue_types(output, residues)
 
     # write output
     write_output(output, input_list[1][0].split('.')[0] + '_occupancies.dat')
-    output_to_pdf(output, input_list[1][0].split('.')[0] + '_occupancies.dat', avrgs, wat, hydro, input_list)
+    output_to_pdf(output, input_list[1][0].split('.')[0] + '_occupancies.dat', avrgs, wat, hydro, input_list, investigated_residue)
 
 
 def add_averages_column(lst, avrgs):
@@ -184,8 +177,8 @@ def add_averages_column(lst, avrgs):
 
 
 def get_occupancy_of_atoms(prmtop, trajin, atoms, wat, hydro):
-    model_atom_occupancy = cpp.create_contact_cpptraj(trajin, atoms, ['1-500000'], wat, hydro)
-    cpp.run_cpptraj(prmtop, trajin, model_atom_occupancy[0])
+    model_atom_occupancy = create_contact_cpptraj(trajin, atoms, ['1-500000'], wat, hydro)
+    run_cpptraj(prmtop, trajin, model_atom_occupancy[0])
     contacts_init = get_atom_contacts(model_atom_occupancy[1], '')
 
     # calculate number of frames if range is specified in trajectory
@@ -202,8 +195,8 @@ def get_occupancy_of_atoms(prmtop, trajin, atoms, wat, hydro):
 
 # get atoms in contact with specified residue
 def get_contacting_atoms(prmtop, trajin, residue, wat, hydro):
-    model_contacts = cpp.create_contact_cpptraj(trajin, [residue], ['1-500000'], wat, hydro)
-    cpp.run_cpptraj(prmtop, trajin, model_contacts[0])
+    model_contacts = create_contact_cpptraj(trajin, [residue], ['1-500000'], wat, hydro)
+    run_cpptraj(prmtop, trajin, model_contacts[0])
     contact_atoms_init = get_atom_contacts(model_contacts[1], residue)
     atoms = extract_atoms(contact_atoms_init)
     return atoms
@@ -211,15 +204,15 @@ def get_contacting_atoms(prmtop, trajin, residue, wat, hydro):
 
 # returns the averages for all types of atoms in a given prmtop file and trajectory
 def get_contact_averages_of_types(prmtop, trajin, types, mask1, mask2, wat, hydro):
-    model_contacts_mutated = cpp.create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro)
-    cpp.run_cpptraj(prmtop, trajin, model_contacts_mutated[0])
+    model_contacts_mutated = create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro)
+    run_cpptraj(prmtop, trajin, model_contacts_mutated[0])
     avrgs = get_occupancy_averages_of_types(model_contacts_mutated[1], types)
     return avrgs
 
 
 # calculates the average of contacts of types in the given data
 def get_occupancy_averages_of_types(data_file, types):
-    data = cpp.read_cpptraj_contacts_data(data_file)
+    data = read_cpptraj_contacts_data(data_file)
 
     type_occupancy_average = []
     for item in types:
@@ -360,10 +353,6 @@ def get_atom_occupancy(occupancy_atoms, frames):
             counter = 0.0
             last_atom = atom
 
-    # out = Counter(occupancy_atoms)
-    # out = out.items()
-
-    print out
     return out
 
 
@@ -517,23 +506,6 @@ def write_output(output, file_name):
         f.write(output)
 
 
-def convert_res_numbers(contact_atoms):
-    out_list = []
-    for item in contact_atoms:
-        item = item.split('_')
-        temp0 = re.findall("\d+", item[0])[0]
-        temp0_new = CalcResNum1iqd.convert(temp0)
-        item[0] = item[0].replace(temp0, temp0_new)
-
-        if len(item) > 1:
-            temp1 = re.findall("\d+", item[1])[0]
-            temp1_new = CalcResNum1iqd.convert(temp1)
-            item[1] = item[1].replace(temp1, temp1_new)
-        out_list.append('_'.join(item))
-
-    return out_list
-
-
 def prepare_output(output, avrgs):
     output = output.splitlines()
     init_tot = 0
@@ -668,7 +640,6 @@ def add_residue_types(output, types):
         if len(line) > 0 and line[0] == ':':
             residue = line.split('@')[0]
             residue = residue.strip(':')
-            print residue
             for item in types:
                 if item[1] == residue:
                     # e.g. ":SA32"
@@ -680,8 +651,8 @@ def add_residue_types(output, types):
     return '\n'.join(out)
 
 
-def output_to_pdf(output, file_name, avrgs, wat, hydro, input_list):
-    file_name = file_name.split('_')[0]
+def output_to_pdf(output, file_name, avrgs, wat, hydro, input_list, investigated_residue):
+    file_name = investigated_residue
     f = file_name + '0_occupancies.pdf'
     surface = cairo.PDFSurface(f, 595, 842)
     ctx = cairo.Context(surface)
@@ -690,7 +661,7 @@ def output_to_pdf(output, file_name, avrgs, wat, hydro, input_list):
     ctx.set_font_size(20)
     ctx.set_source_rgb(0, 0, 0)
     ctx.move_to(20, 30)
-    title = file_name
+    title = investigated_residue
 
     if hydro:
         title += " - hydrogen stripped"
@@ -806,6 +777,285 @@ def parse_input_list(input_list):
     out.remove(out[0])
     out.append(temp)
     return out
+
+
+def output_2D_list(list2d):
+    output = ""
+    for item in list2d:
+        for cell in item:
+            output += str(cell) + ","
+        output += "\n"
+    return output
+
+
+def c_get(lst, column):
+    outlist = []
+    for item in lst:
+        outlist.append(item[column])
+    return outlist
+
+
+# add a column to the right
+def c_bind(list1, list2):
+    outlist = []
+    if len(list1) == len(list2):
+        for i in range(0, len(list1)):
+            if not isinstance(list1[i], list):
+                temp1 = [list1[i]]
+            else:
+                temp1 = list1[i]
+
+            if not isinstance(list2[i], list):
+                temp2 = [list2[i]]
+            else:
+                temp2 = list2[i]
+
+            temp1.extend(temp2)
+            outlist.append(temp1)
+    else:
+        print "fail: lists have different lengths"
+
+    return outlist
+
+
+# delete a column
+def c_del(lst, column):
+    outlist = []
+
+    for item in lst:
+        outitem = item[:column]
+        outitem.extend(item[column + 1:])
+        outlist.append(outitem)
+
+    return outlist
+
+
+
+# method reading the 'ATOM' records of a pdb file and returns atom number, atom type, residue type, residue number and
+# coordinates in a list (e.g. [[1, N, CYX, 1, 43.390, 49.887, -62.005],[2, CA, ...], ...])
+def read_pdb_atoms(pdb_file, wat):
+    out = []
+
+    with open(pdb_file, 'r') as f:
+        for line in f:
+            line = line.split()
+            if 'ATOM' in line[0]:
+                if not ((line[3] == 'WAT') and wat):
+                    a_number = line[1]
+                    a_type = line[2]
+                    res_type = line[3]
+                    res_number = line[4]
+                    x = line[5]
+                    y = line[6]
+                    z = line[7]
+                    out.append([a_number, a_type, res_type, res_number, x, y, z])
+    return out
+
+
+# returns a list of atom types of a pdb list
+def get_all_atom_types(atom_list):
+    types = []
+    for atom in atom_list:
+        types.append(atom[1])
+
+    types = list(set(types))
+
+    return types
+
+
+# returns a list of residues with numbering of a pdb list
+def get_all_residues(atom_list):
+    residues = []
+    for residue in atom_list:
+        if residue[2] != 'WAT' and residue[2] != 'Cl-':
+            residues.append(residue[2] + "," + residue[3])
+
+    residues = list(set(residues))
+
+    return residues
+
+
+# returns a list of residue numbers of a pdb list
+def get_all_residue_numbers(atom_list):
+    residue_numbers = []
+    for atom in atom_list:
+        residue_numbers.append(atom[3])
+
+    residue_numbers = list(set(residue_numbers))
+    residue_numbers = [int(number) for number in residue_numbers]
+    residue_numbers = sorted(residue_numbers)
+
+    return residue_numbers
+
+
+# convert residue types taxonomy
+def convert_res_types(res_types):
+    res_codes = {}
+    res_codes['ALA'] = 'A'
+    res_codes['ARG'] = 'R'
+    res_codes['ASN'] = 'N'
+    res_codes['ASP'] = 'D'
+    res_codes['CYS'] = 'C'
+    res_codes['CYX'] = 'C'
+    res_codes['GLU'] = 'E'
+    res_codes['GLN'] = 'Q'
+    res_codes['GLY'] = 'G'
+    res_codes['HIS'] = 'H'
+    res_codes['HIE'] = 'H'
+    res_codes['HID'] = 'H'
+    res_codes['HIP'] = 'H'
+    res_codes['ILE'] = 'I'
+    res_codes['LEU'] = 'L'
+    res_codes['LYS'] = 'K'
+    res_codes['MET'] = 'M'
+    res_codes['PHE'] = 'F'
+    res_codes['PRO'] = 'P'
+    res_codes['SER'] = 'S'
+    res_codes['THR'] = 'T'
+    res_codes['TRP'] = 'W'
+    res_codes['TYR'] = 'Y'
+    res_codes['VAL'] = 'V'
+
+    out = []
+    for item in res_types:
+        if len(res_types[0]) > 1:
+            out.append(res_codes[item])
+
+    return out
+
+
+def get_non_solvent_residues(pdb_file):
+    atoms = read_pdb_atoms(pdb_file, 1)
+    residues = get_all_residue_numbers(atoms)
+    return residues
+
+
+import os
+import timeit
+
+
+# reads in the specfied file and returns a list that contains elements consiting of the two contacting atoms and
+# their distance to each other (e.g. [[[246@N, 23@C],2.34], [246@H, 23@CB], 3.12],...]
+def read_cpptraj_contacts_data(file_name):
+
+    out = []
+    with open(file_name, 'r') as f:
+        for line in f:
+            if line[0] is not '#':
+                line = line.split()
+                atom = line[1].replace(':', '')
+                atom = atom.split('_')
+                dist = float(line[4])
+                if atom[0] != atom[1]:
+                    out.append([atom, dist])
+    return out
+
+
+# executes the cpptraj with the given parameters, outputs of will be written as files specified in the cpptraj file
+def run_cpptraj(prmtop, trajin, cpptraj_file):
+    cpptraj = 'cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file + ' > ' + cpptraj_file.replace('.',
+                                                                                                              '_') + ".log"
+    print cpptraj
+    start = timeit.default_timer()
+    os.system(cpptraj)
+    stop = timeit.default_timer()
+    elapsed = round(stop - start)
+    minutes = str(int(elapsed / 60))
+    seconds = str(int(elapsed % 60))
+    print minutes + " minutes " + seconds + " seconds"
+
+
+# creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
+# e.g. nativecontacts :47@C :1-5000 writecontacts F2196A_contacts.dat distance 3.9). The name fo the file is the
+# given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
+# F2196A_contacts.cpptraj). Water, Chlor and hydrogen stripped
+def create_contact_cpptraj(trajin, mask1, mask2, wat, hydro):
+    t = trajin.split()
+    frames = ""
+    if len(t) > 1:
+        frames = "_" + t[1] + "_" + t[2]
+        frames = frames.strip("\"")
+    cpptraj_file = t[0].split('.')[0].strip("\"") + "_" + t[0].split('.')[1] + frames + "_contacts.cpptraj"
+    out_file = cpptraj_file.replace('cpptraj', 'dat')
+
+    with open(cpptraj_file, 'w') as f:
+        if wat:
+            f.write('strip :WAT\n')
+        if hydro:
+            f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+
+        for item1 in mask1:
+            # TODO: needs proper handling of a list of masks
+            for item2 in mask2:
+                f.write('nativecontacts :' + item1 + ' :' + item2 + ' writecontacts ' +
+                    out_file + ' distance 3.9\n')
+        f.write('go')
+
+    return [cpptraj_file, out_file]
+
+
+# get contacts for atom types
+def create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro):
+    t = trajin.split()
+    frames = ""
+    if len(t) > 1:
+        frames = "_" + t[1] + "_" + t[2]
+        frames = frames.strip("\"")
+    cpptraj_file = t[0].split('.')[0].strip("\"") + "_" + t[0].split('.')[1] + frames + "_averages_contacts.cpptraj"
+    out_file = cpptraj_file.replace('cpptraj', 'dat')
+
+    with open(cpptraj_file, 'w') as f:
+        if wat:
+            f.write('strip :WAT\n')
+        if hydro:
+            f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+
+        for item in types:
+            f.write('nativecontacts (:' + mask1 + ')&(@' + item + ') :' + mask2 + ' writecontacts ' + out_file +
+                    ' distance 3.9\n')
+        f.write('go')
+
+    return [cpptraj_file, out_file]
+
+
+# creates a cpptraj file to generate a pdb from the given inputs. Returns name of cpptraj file and name of pdb file.
+# Water, Chlor and hydrogen stripped
+def create_pdb_cpptraj(prmtop, trajin, wat, hydro):
+    prmtop = prmtop.split('.')[0]
+    prmtop = prmtop.split('/')[-1]
+    trajin = trajin.split('.')[0]
+    trajin = trajin.split('/')[-1]
+    cpptraj_file = prmtop + "_cpptraj"
+    pdb = prmtop + "_" + trajin + ".pdb"
+
+    with open(cpptraj_file, 'w') as f:
+        if wat:
+            f.write('strip :WAT\n')
+        if hydro:
+            f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+        f.write('trajout ' + pdb)
+        f.write('\ngo')
+    return [cpptraj_file, pdb]
+
+
+# returns a list of all atoms with an atom type (e.g. [23@CA, 23@C,...])
+def create_all_atom_residue_list(atom_list, atom_types):
+    out = []
+    for atom in atom_list:
+        if atom[2]:
+            for atom_type in atom_types:
+                if atom_type == atom[1]:
+                    out.append(atom[3] + '@' + atom_type)
+
+    return out
+
+
+# generates pdb file in the working directory from parameters. Returns the name of the pdb file.
+def generate_pdb(prmtop, trajin, wat, hydro):
+    cpptraj = create_pdb_cpptraj(prmtop, trajin, wat, hydro)
+    run_cpptraj(prmtop, trajin, cpptraj[0])
+    pdb_name = cpptraj[1]
+    return pdb_name
 
 
 if __name__ == "__main__":

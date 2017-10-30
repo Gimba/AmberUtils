@@ -227,7 +227,7 @@ def remove_single_column(col_ids, cols, energies):
 def write_summary_file(summary, col_ids, cols, energies, locations):
     with open(summary, 'wb') as fo:
         writer = csv.writer(fo, delimiter=',')
-        writer.writerow(['Column', 'Residue', 'Total'])
+        writer.writerow(['Column', 'Chain', 'Residue', 'Total'])
         for col_id in col_ids:
             for res in cols[col_id]:
                 if 'Gap' not in res['Id']:
@@ -237,7 +237,7 @@ def write_summary_file(summary, col_ids, cols, energies, locations):
                         (r1, r2, e) = v
                         if (r1 == res['Id'] or r2 == res['Id']) and locations[r1][0] != locations[r2][0]:
                             total += e
-                    writer.writerow([col_id, legend, total])
+                    writer.writerow([col_id, res['Chain'], legend, total])
                 else:
                     writer.writerow(['', '', ''])
 
