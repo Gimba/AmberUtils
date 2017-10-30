@@ -1,4 +1,5 @@
 import os
+import timeit
 
 
 # reads in the specfied file and returns a list that contains elements consiting of the two contacting atoms and
@@ -20,16 +21,29 @@ def read_cpptraj_contacts_data(file_name):
 
 # executes the cpptraj with the given parameters, outputs of will be written as files specified in the cpptraj file
 def run_cpptraj(prmtop, trajin, cpptraj_file):
-    os.system('cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file + ' > ' + cpptraj_file.replace('.', '_')
-              + ".log")
+    cpptraj = 'cpptraj -p ' + prmtop + ' -y ' + trajin + ' -i ' + cpptraj_file + ' > ' + cpptraj_file.replace('.',
+                                                                                                              '_') + ".log"
+    print cpptraj
+    start = timeit.default_timer()
+    os.system(cpptraj)
+    stop = timeit.default_timer()
+    elapsed = round(stop - start)
+    minutes = str(int(elapsed / 60))
+    seconds = str(int(elapsed % 60))
+    print minutes + " minutes " + seconds + " seconds"
 
 
 # creates a cpptraj infile that contains commands to get native contacts between the list given by res1 and res2 (
 # e.g. nativecontacts :47@C :1-5000 writecontacts F2196A_contacts.dat distance 3.9). The name fo the file is the
 # given trajin without file extension followed by "_contacts.cpptraj" (e.g. trajin = F2196A.nc ->
 # F2196A_contacts.cpptraj). Water, Chlor and hydrogen stripped
-def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
-    cpptraj_file = trajin.split('.')[0] + "_" + trajin.split('.')[1] + "_contacts.cpptraj"
+def create_contact_cpptraj(trajin, mask1, mask2, wat, hydro):
+    t = trajin.split()
+    frames = ""
+    if len(t) > 1:
+        frames = "_" + t[1] + "_" + t[2]
+        frames = frames.strip("\"")
+    cpptraj_file = t[0].split('.')[0].strip("\"") + "_" + t[0].split('.')[1] + frames + "_contacts.cpptraj"
     out_file = cpptraj_file.replace('cpptraj', 'dat')
 
     with open(cpptraj_file, 'w') as f:
@@ -38,10 +52,35 @@ def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
         if hydro:
             f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
 
-        for item1 in res1:
-            for item2 in res2:
+        for item1 in mask1:
+            # TODO: needs proper handling of a list of masks
+            for item2 in mask2:
                 f.write('nativecontacts :' + item1 + ' :' + item2 + ' writecontacts ' +
                     out_file + ' distance 3.9\n')
+        f.write('go')
+
+    return [cpptraj_file, out_file]
+
+
+# get contacts for atom types
+def create_contact_cpptraj_types(trajin, types, mask1, mask2, wat, hydro):
+    t = trajin.split()
+    frames = ""
+    if len(t) > 1:
+        frames = "_" + t[1] + "_" + t[2]
+        frames = frames.strip("\"")
+    cpptraj_file = t[0].split('.')[0].strip("\"") + "_" + t[0].split('.')[1] + frames + "_averages_contacts.cpptraj"
+    out_file = cpptraj_file.replace('cpptraj', 'dat')
+
+    with open(cpptraj_file, 'w') as f:
+        if wat:
+            f.write('strip :WAT\n')
+        if hydro:
+            f.write('strip @H*\nstrip @?H*\nstrip @Cl-\n')
+
+        for item in types:
+            f.write('nativecontacts (:' + mask1 + ')&(@' + item + ') :' + mask2 + ' writecontacts ' + out_file +
+                    ' distance 3.9\n')
         f.write('go')
 
     return [cpptraj_file, out_file]
@@ -51,7 +90,9 @@ def create_contact_cpptraj(trajin, res1, res2, wat, hydro):
 # Water, Chlor and hydrogen stripped
 def create_pdb_cpptraj(prmtop, trajin, wat, hydro):
     prmtop = prmtop.split('.')[0]
+    prmtop = prmtop.split('/')[-1]
     trajin = trajin.split('.')[0]
+    trajin = trajin.split('/')[-1]
     cpptraj_file = prmtop + "_pdb.cpptraj"
     pdb = prmtop + "_" + trajin + ".pdb"
 
@@ -69,9 +110,10 @@ def create_pdb_cpptraj(prmtop, trajin, wat, hydro):
 def create_all_atom_residue_list(atom_list, atom_types):
     out = []
     for atom in atom_list:
-        for atom_type in atom_types:
-            if atom_type == atom[1]:
-                out.append(atom[3] + '@' + atom_type)
+        if atom[2]:
+            for atom_type in atom_types:
+                if atom_type == atom[1]:
+                    out.append(atom[3] + '@' + atom_type)
 
     return out
 

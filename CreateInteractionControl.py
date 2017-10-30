@@ -15,59 +15,72 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
 import argparse
+import csv
+import re
+import sys
 
 __author__ = 'Martin Rosellen'
 __docformat__ = "restructuredtext en"
 
+
 def main(argv):
-    parser = argparse.ArgumentParser(description='Creates a 1iqd_interactions_control.csv file for plotting '
-                                                 'interaction between residues and therefore determines interacting '
-                                                 'residues using hbonds.consol.csv and FINAL_DECOMP_MMPBSA_table.csv')
+    parser = argparse.ArgumentParser(description='Creates an control csv file for plotting '
+                                                 'interactions energies between residues (DrawInteractions.pd). '
+                                                 'Extracts interacting residues using hbonds_consol.csv and '
+                                                 'FINAL_DECOMP_MMPBSA_table.csv.')
+    parser.add_argument('hbonds', help='hbonds_consol.csv')
+    parser.add_argument('fdmmpbsa', help='FINAL_DECOMP_MMPBSA_table.csv')
+    parser.add_argument('output', help='output file (CSV)')
+    parser.add_argument('-m', '--mapping', help='mapping file for residue numbers and chains')
+    parser.add_argument('-c', '--column_order', nargs='?', help='Assign chains to columns (e.g. \'-c CA\' -> C first, '
+                                                                'A second column)')
+    args = parser.parse_args()
 
     entries = []
 
-    with open('hbonds_consol.csv', 'r') as fo:
+    with open(args.hbonds, 'r') as fo:
         for line in fo:
             entries.append(line[0:7])
             entries.append(line[8:15])
         entries = list(set(entries))
 
-    with open('FINAL_DECOMP_MMPBSA_table.csv', 'r') as fo:
+    with open(args.fdmmpbsa, 'r') as fo:
         head = fo.readline()
-        # remove /r/n at the end of line
-        head = head[0:-2]
-
-        # split at ,
-        head = head.split(',',len(head))
-
-        # remove first entry "Res"
+        head = head.strip()
+        head = head.split(',')
         head = head[1:]
 
         entries.extend(head)
 
+        # remove duplicates
         entries = list(set(entries))
 
     out_lines = []
+    with open(args.mapping, 'r') as f:
+        mapping = csv.DictReader(f)
+        mapping = dict((row['from'], [row['to'], row['chain']]) for row in mapping)
+
+    if args.column_order:
+        column_order = args.column_order.replace(' ', '')
+    else:
+        column_order = ''.join(set([item[1] for item in mapping.values()]))
 
     # assign residues to columns
     for entry in entries:
-        resnum = int(entry[-3:])
-        if(int(entry[-3:]) < 156):
-            out_lines.append("0," + entry + "," + str(resnum + 2173) + ",Hydro")
-        else:
-            if(resnum <= 367):
-                resnum = resnum - 156
-            else:
-                resnum = resnum - 367
-            out_lines.append("1," + entry + "," + str(resnum) + ",Hydro")
+        resnum = re.findall(r'\d+', entry)[0]
+        residue = mapping[resnum][0]
+        chain = mapping[resnum][1]
+        column = str(column_order.index(chain) + 1)
+        out_lines.append(column + "," + entry + "," + residue + "," + chain + ",Hydro")
 
-    # sort so that first column residues appear first in the control file
+    out_lines = sorted(out_lines)
 
-    with open('1iqd_interactions_control.csv', 'w') as out:
-        out.writelines("Col,Id,Legend,Fill" + '\n')
+    with open(args.output, 'w') as out:
+        out.writelines("Col,Id,Legend,Chain,Fill" + '\n')
         for line in out_lines:
             out.writelines(line + '\n')
+
+
 if __name__ == "__main__":
     main(sys.argv)
