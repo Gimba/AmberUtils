@@ -61,7 +61,7 @@ def main(argv):
     last_warning = ''
     error = None
            
-    print "Chain Ref. Start Ref. End Inf. Start Inf. End"
+    print("Chain Ref. Start Ref. End Inf. Start Inf. End")
     
     with open(args.infile, "r") as fi, open(args.outfile, "w") as fo:
         try:        
@@ -80,7 +80,8 @@ def main(argv):
                         # Track chain changes
                         if old_chain != ref_res[2]:
                             if old_chain != "": 
-                                print "%5s %11s %8s %10s %8s" % (old_chain, ref_chain_startnum, old_ref_resnum, inf_chain_startnum, old_resnum)
+                                print("%5s %11s %8s %10s %8s" % (old_chain, ref_chain_startnum, old_ref_resnum,
+                                                                 inf_chain_startnum, old_resnum))
                             ref_chain_startnum = ref_res[0]
                             inf_chain_startnum = resnum
                             old_chain = ref_res[2]
@@ -101,7 +102,8 @@ def main(argv):
                             l[17:20] = ref_res[1]    
                         else:
                             if resnum != last_warning:
-                                print "Warning: at residue %s in infile, residue %s in infile differs from %s in reference." % (resnum, resname, ref_res[1])
+                                print("Warning: at residue %s in infile, residue %s in infile differs from %s in "
+                                      "reference." % (resnum, resname, ref_res[1]))
                                 last_warning = resnum
 
                     # Use reference residue number and chain
@@ -117,10 +119,10 @@ def main(argv):
                 for line in fi:
                     fo.write(line)
 
-    print "%5s %11s %8s %10s %8s" % (old_chain, ref_chain_startnum, old_ref_resnum, inf_chain_startnum, old_resnum)
+    print("%5s %11s %8s %10s %8s" % (old_chain, ref_chain_startnum, old_ref_resnum, inf_chain_startnum, old_resnum))
     
     if error:
-        print error
+        print(error)
         
             
 if __name__ == "__main__":

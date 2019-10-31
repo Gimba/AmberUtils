@@ -36,8 +36,9 @@ def main(argv):
     args = parser.parse_args()
 
     if len(argv) != 7:
-        print "usage: python replace_res.py <input file> <output file> <modeller output file> <chain> <starting_number> " \
-              "<ending_number>."
+        print("usage: python replace_res.py <input file> <output file> <modeller output file> <chain> "
+              "<starting_number> " \
+              "<ending_number>.")
         sys.exit(0)
 
     chain_id = args.chain
@@ -100,15 +101,15 @@ def main(argv):
                         if rep_line[0:4] == "ATOM":
                             resname = line[17:20]
                             if resname == "HIS":
-                                print "Warning: replacing HIS residue at %s: fix protonation." % resnum
+                                print("Warning: replacing HIS residue at %s: fix protonation." % resnum)
                             if rep_resname == "HIS":
-                                print "Warning: inserting HIS residue at %s: fix protonation." % resnum
+                                print("Warning: inserting HIS residue at %s: fix protonation." % resnum)
                             if rep_resnum != old_rep_resnum:
                                 if rep_resnum == resnum:
                                     if resname != rep_resname:
-                                        print "%s %s %s -> %s" % (rep_resnum, chain, resname, rep_resname)
+                                        print("%s %s %s -> %s" % (rep_resnum, chain, resname, rep_resname))
                                 else:
-                                    print "%s %s gap -> %s" % (rep_resnum, chain, rep_resname)
+                                    print("%s %s gap -> %s" % (rep_resnum, chain, rep_resname))
 
                             if "SG" in rep_line[12:16] and "%s %s" % (rep_line[21], rep_line[22:27]) in cyx_sg_atoms:
                                 atom_num = cyx_sg_atoms["%s %s" % (rep_line[21], rep_line[22:27])]

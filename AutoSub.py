@@ -72,7 +72,7 @@ def main(argv):
 
     args = parser.parse_args()
     if len(args.chain) > 1:
-        print 'Error: chain must be a single letter'
+        print('Error: chain must be a single letter')
         quit()
 
     if args.loopmodels:
@@ -101,7 +101,8 @@ def main(argv):
                 res_num = pdb_num(sub[1:-1])
                 subs[res_num] = [orig_res, rep_res, -1, sub]
                 if args.restore_res and rep_res == 'H':
-                    print 'Warning: the histidine substitution in %s will require adjustment to reflect its protonation.' % sub
+                    print('Warning: the histidine substitution in %s will require adjustment to reflect its '
+                          'protonation.' % sub)
             elif orig_res == '-':
                 (res_num, rep_res) = sub[1:].split('.')
                 res_num = pdb_num(res_num)
@@ -110,7 +111,8 @@ def main(argv):
                 else:
                     insertions[res_num] = [orig_res, rep_res, -1, sub]
                 if 'H' in rep_res:
-                    print 'Warning: the histidine insertion in %s will require adjustment to reflect its protonation.' % sub
+                    print('Warning: the histidine insertion in %s will require adjustment to reflect its '
+                          'protonation.' % sub)
             else:
                 (res_num, rep_res) = sub[1:].split('.')
                 res_num = pdb_num(res_num)
@@ -119,13 +121,14 @@ def main(argv):
                 else:
                     deletions[res_num] = [orig_res, rep_res, -1, sub]
                 if 'H' in rep_res:
-                    print 'Warning: the histidine substitution in %s will require adjustment to reflect its protonation.' % sub
+                    print('Warning: the histidine substitution in %s will require adjustment to reflect its '
+                          'protonation.' % sub)
         except:
-            print 'Format error in substitution %s' % sub
+            print('Format error in substitution %s' % sub)
             quit()
 
     if args.restore_res:
-        print 'Restoring standard residue names.'
+        print('Restoring standard residue names.')
         changes = {}
         changes['HIE'] = 'HIS'
         changes['HID'] = 'HIS'
@@ -151,7 +154,7 @@ def main(argv):
                 if args.restore_res and resname in changes:
                     line = line.replace(resname, changes[resname])
                     if reported != resnum + chain:
-                        print '%s %s %s -> %s' % (resnum, chain, resname, changes[resname])
+                        print('%s %s %s -> %s' % (resnum, chain, resname, changes[resname]))
                         reported = resnum + chain
                                         
                 if chain == args.chain and resnum != prev_res:
@@ -159,7 +162,8 @@ def main(argv):
                     prev_res = resnum
                     if resnum in subs and subs[resnum][2] < 0:
                         if res_codes[resname] != subs[resnum][0]:
-                            print 'Error: original residue %s does not match substitution code %s' % (resname, subs[resnum][3])
+                            print('Error: original residue %s does not match substitution code %s' % (resname,
+                        subs[resnum][3]))
                             quit()
                         else:
                             sub_seq += subs[resnum][1]
@@ -172,7 +176,9 @@ def main(argv):
                     elif resnum in deletions:
                         deletions[resnum][2] = index
                         if res_codes[resname] != deletions[resnum][0]:
-                            print 'Error: original residue %s does not match substitution code %s' % (resname, deletions[resnum][3])
+                            print('Error: original residue %s does not match substitution code %s' % (resname,
+                                                                                                      deletions[
+                                                                                                      resnum][3]))
                             quit()
 
             of.write(line)
@@ -183,7 +189,8 @@ def main(argv):
     for s in(subs, insertions, deletions):
         for k, sub in s.iteritems():
             if sub[2] < 0:
-                print 'Residue %s:%s (required for substitution %s) was not found in the PDB file' % (args.chain, k, sub[3])
+                print('Residue %s:%s (required for substitution %s) was not found in the PDB file' % (args.chain, k,
+                                                                                                      sub[3]))
                 error = True
             else:
                 lowest_sub = min(lowest_sub, sub[2])
@@ -229,7 +236,7 @@ def main(argv):
                 return seq
 
             if len(al_seqs) != 2:
-                print 'Internal error: wrong number of sequences in alignment.ali'
+                print('Internal error: wrong number of sequences in alignment.ali')
                 quit()
 
             for k,ins in insertions.iteritems():
@@ -279,10 +286,10 @@ def main(argv):
                 bestpdfname = output['name']
     
     if bestpdfname == '':
-        print 'Error in modelling run: no modelled files produced.'
+        print('Error in modelling run: no modelled files produced.')
         quit()
     
-    print 'Best modelled file is %s: objective function value %f' % (bestpdfname, bestmolpdf)
+    print('Best modelled file is %s: objective function value %f' % (bestpdfname, bestmolpdf))
     copyfile(bestpdfname, args.outfile)
 
 
