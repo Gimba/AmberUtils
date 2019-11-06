@@ -119,7 +119,7 @@ def main(argv):
                 else:
                     val = (sum(values[res1][res2])/len(values[res1][res2]))
                     if abs(val) >= threshold:
-                        row[res2] = round(val, 2)
+                        row[res2] = round(val, 8)
                     else:
                         row[res2] = ''
             writer.writerow(row)
