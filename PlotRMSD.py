@@ -36,29 +36,31 @@ def main(argv):
     cwd = os.getcwd()
     mutation = cwd.split("/")[-1]
     super = cwd.split("/")[-2]
-    title = (super + " " + mutation + ": Production 1-" + args.num + "\n RMSD values of hairpin region (2186-2210)")
+    title = (super + " " + mutation + ": " + args.num + "\n RMSD values of hairpin region (2248-2255)")
 
     values = []
 
     with open(args.infile,'r') as f:
         f.readline()
         for line in f:
-            values.append(float(line.split("    ")[2][3:-1]))
+           if line[0] == '#':
+               continue
+           values.append(float(line.split()[1]))
 
     mean = np.mean(values)
     variance = np.var(values)
-    caption = "variance: " + str(variance)
+    caption = "variance: " + str(round(variance,2))
 
-    plt.axhline(mean, color='g')
     plt.ylabel("rmsd value")
     plt.xlabel("frame")
     plt.plot(values)
+    plt.axhline(mean, color='r')
 
     pos = plt.xlim()[1]
-    plt.text(pos/2,0.62,str(caption),ha='center')
-    plt.text(pos,mean," " + str(round(mean,2)),va='center')
+    plt.text(pos,0,str(caption),ha='right')
+    plt.text(pos,mean,"mean:\n" + str(round(mean,2)),va='center')
 
-    plt.ylim([0.6,1.6])
+    plt.ylim([0,2])
     plt.title(title)
     plt.savefig(args.outfile)
 
